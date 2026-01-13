@@ -1,0 +1,15 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(xargs -I {} ls -la {}/__init__.py)",
+      "Bash(ls -la */)",
+      "Bash(xargs basename -a)",
+      "Bash(find . -name \"*.py\" -exec grep -h \"import \\\\|from \" {} ;)",
+      "Bash(xargs -I {} sh -c 'if [ ! -f \"\"{}/__init__.py\"\" ]; then echo \"\"Missing __init__.py in: {}\"\"; fi')",
+      "Bash(grep -hE \"^import [a-zA-Z]|^from [a-zA-Z]\" /mnt/e/giaic-q4-hackathon2-phase3/backend/**/*.py)",
+      "Bash(python -c \"import main; print\\(''Successfully imported main module''\\)\")",
+      "Bash(pip install -r requirements.txt)",
+      "Bash(python test_imports.py)"
+    ]
+  }
+}
