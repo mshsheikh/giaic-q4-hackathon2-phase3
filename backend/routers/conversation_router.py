@@ -4,11 +4,11 @@ Conversation Management API Router
 from fastapi import APIRouter, HTTPException, status, Depends, Query, Request
 from typing import List, Optional
 from uuid import UUID
-from ..services.conversation_management_service import ConversationManagementService
-from ..services.db_conversation_service import DBConversationService
-from ..services.db_message_service import DBMessageService
-from ..database.connection import get_session_context
-from ..schemas.conversation_management_schemas import (
+from backend.services.conversation_management_service import ConversationManagementService
+from backend.services.db_conversation_service import DBConversationService
+from backend.services.db_message_service import DBMessageService
+from backend.database.connection import get_session_context
+from backend.schemas.conversation_management_schemas import (
     ConversationCreateRequest,
     ConversationCreateResponse,
     ConversationListResponse,
@@ -17,10 +17,10 @@ from ..schemas.conversation_management_schemas import (
     ConversationUpdateResponse,
     ConversationDeleteResponse
 )
-from ..auth.user_service import UserService
-from ..logging.config import log_with_context
-from ..middleware.correlation_id_middleware import get_correlation_id
-from ..services.circuit_breaker import circuit_breaker
+from backend.auth.user_service import UserService
+from backend.logging.config import log_with_context
+from backend.middleware.correlation_id_middleware import get_correlation_id
+from backend.services.circuit_breaker import circuit_breaker
 import logging
 
 

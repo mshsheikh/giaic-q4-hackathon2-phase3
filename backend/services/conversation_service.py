@@ -3,11 +3,11 @@ Conversation Service for the Todo AI Chatbot
 """
 from typing import Optional, List, Dict
 from uuid import UUID
-from ..models.conversation import Conversation
-from ..models.message import Message
-from ..database.connection import get_session_context
-from ..services.db_conversation_service import DBConversationService
-from ..services.db_message_service import DBMessageService
+from backend.models.conversation import Conversation
+from backend.models.message import Message
+from backend.database.connection import get_session_context
+from backend.services.db_conversation_service import DBConversationService
+from backend.services.db_message_service import DBMessageService
 
 
 class ConversationService:

@@ -4,7 +4,7 @@ Database service for Conversation operations in the Todo AI Chatbot
 from sqlmodel import Session, select, and_
 from typing import List, Optional
 from uuid import UUID
-from ..models.conversation import Conversation
+from backend.models.conversation import Conversation
 from datetime import datetime
 
 

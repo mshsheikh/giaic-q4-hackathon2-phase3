@@ -4,15 +4,15 @@ Chat API Router for the Todo AI Chatbot
 from fastapi import APIRouter, HTTPException, status, Request
 from typing import List, Optional
 from uuid import UUID
-from ..schemas.chat_schemas import ChatRequest, ChatResponse, ToolCall
-from ..services.conversation_service import ConversationService
-from ..services.db_message_service import DBMessageService
-from ..services.tool_call_service import ToolCallService
-from ..database.connection import get_session_context
-from ..models.message import MessageRole
-from ..auth.user_service import UserService
-from ...agent.conversation_handler import ConversationHandler
-from ...agent.todo_agent import TodoAgent
+from backend.schemas.chat_schemas import ChatRequest, ChatResponse, ToolCall
+from backend.services.conversation_service import ConversationService
+from backend.services.db_message_service import DBMessageService
+from backend.services.tool_call_service import ToolCallService
+from backend.database.connection import get_session_context
+from backend.models.message import MessageRole
+from backend.auth.user_service import UserService
+from agent.conversation_handler import ConversationHandler
+from agent.todo_agent import TodoAgent
 from datetime import datetime
 import asyncio
 

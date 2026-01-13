@@ -4,8 +4,8 @@ Authentication Middleware for the Todo AI Chatbot
 import jwt
 from fastapi import HTTPException, status, Request
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
-from .config import AuthConfig
-from .session_manager import session_manager
+from backend.auth.config import AuthConfig
+from backend.auth.session_manager import session_manager
 from typing import Optional, Dict, Any
 import httpx
 

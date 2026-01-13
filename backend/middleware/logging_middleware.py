@@ -6,7 +6,7 @@ import logging
 from typing import Callable, Awaitable
 from fastapi import Request, Response
 from starlette.middleware.base import BaseHTTPMiddleware, RequestResponseEndpoint
-from ..logging.config import log_with_context
+from backend.logging.config import log_with_context
 
 
 class StructuredLoggingMiddleware(BaseHTTPMiddleware):

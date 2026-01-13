@@ -5,9 +5,9 @@ Tracks and logs tool calls made by the agent.
 from typing import Dict, Any, List
 from uuid import UUID
 from datetime import datetime
-from ..database.connection import get_session_context
-from ..models.message import MessageRole
-from ..services.db_message_service import DBMessageService
+from backend.database.connection import get_session_context
+from backend.models.message import MessageRole
+from backend.services.db_message_service import DBMessageService
 
 
 class ToolCallService:

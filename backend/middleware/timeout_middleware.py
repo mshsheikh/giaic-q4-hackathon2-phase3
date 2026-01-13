@@ -7,7 +7,7 @@ from typing import Callable, Awaitable
 from fastapi import Request, Response, HTTPException
 from starlette.middleware.base import BaseHTTPMiddleware, RequestResponseEndpoint
 from starlette.responses import JSONResponse
-from ..config.timeout_config import get_timeout_config
+from backend.config.timeout_config import get_timeout_config
 
 
 class TimeoutMiddleware(BaseHTTPMiddleware):

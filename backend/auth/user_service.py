@@ -2,13 +2,13 @@
 User Service for handling user identity and authentication
 """
 from typing import Dict, Any, Optional
-from .middleware import auth_middleware
+from backend.auth.middleware import auth_middleware
 from fastapi import Request, HTTPException, status
-from ..models.user import User  # We'll need to create this model
-from ..database.connection import get_session_context
-from ..services.db_conversation_service import DBConversationService
-from ..services.db_message_service import DBMessageService
-from ..services.db_task_service import DBTaskService
+from backend.models.user import User  # We'll need to create this model
+from backend.database.connection import get_session_context
+from backend.services.db_conversation_service import DBConversationService
+from backend.services.db_message_service import DBMessageService
+from backend.services.db_task_service import DBTaskService
 
 
 class UserService:

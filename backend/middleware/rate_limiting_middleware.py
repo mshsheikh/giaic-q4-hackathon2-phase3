@@ -8,8 +8,8 @@ from fastapi import Request, Response, HTTPException
 from starlette.middleware.base import BaseHTTPMiddleware, RequestResponseEndpoint
 from starlette.responses import JSONResponse
 from collections import defaultdict, deque
-from ..config.rate_limit_config import get_rate_limit_config
-from ..logging.config import log_with_context
+from backend.config.rate_limit_config import get_rate_limit_config
+from backend.logging.config import log_with_context
 import logging
 
 

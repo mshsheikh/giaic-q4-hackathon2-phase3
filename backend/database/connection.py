@@ -7,7 +7,7 @@ from sqlalchemy.pool import Pool
 import os
 from typing import Generator
 from contextlib import contextmanager
-from ..config.timeout_config import get_timeout_config
+from backend.config.timeout_config import get_timeout_config
 
 # Get timeout configuration
 timeout_config = get_timeout_config()
@@ -60,7 +60,7 @@ def create_db_and_tables():
     """
     Create database tables. This should typically be called once at startup.
     """
-    from ..models import Task, Conversation, Message
+    from backend.models import Task, Conversation, Message
     from sqlmodel import SQLModel
 
     # Create all tables

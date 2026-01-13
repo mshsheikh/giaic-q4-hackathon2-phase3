@@ -8,8 +8,8 @@ import time
 import subprocess
 import socket
 from sqlalchemy import text
-from ..database.connection import get_session_context
-from ..config.debug_config import get_debug_config
+from backend.database.connection import get_session_context
+from backend.config.debug_config import get_debug_config
 
 
 router = APIRouter(tags=["health"])

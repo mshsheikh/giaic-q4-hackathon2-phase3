@@ -5,8 +5,8 @@ import time
 from typing import Callable, Awaitable
 from fastapi import Request, Response
 from starlette.middleware.base import BaseHTTPMiddleware, RequestResponseEndpoint
-from ..config.debug_config import get_debug_config
-from ..logging.config import log_with_context
+from backend.config.debug_config import get_debug_config
+from backend.logging.config import log_with_context
 
 
 class DebugModeMiddleware(BaseHTTPMiddleware):
