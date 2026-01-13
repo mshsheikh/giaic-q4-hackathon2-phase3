@@ -4,9 +4,9 @@ Unit tests for rate limiting functionality
 import pytest
 import time
 from unittest.mock import Mock, patch
-from backend.middleware.rate_limiting_middleware import RateLimitMiddleware, get_client_identifier
-from backend.config.rate_limit_config import RateLimitConfig, get_rate_limit_config
-from backend.services.rate_limit_service import RateLimitService
+from middleware.rate_limiting_middleware import RateLimitMiddleware, get_client_identifier
+from config.rate_limit_config import RateLimitConfig, get_rate_limit_config
+from services.rate_limit_service import RateLimitService
 
 
 class TestRateLimitConfig:

@@ -3,8 +3,8 @@ Unit tests for correlation ID functionality
 """
 import pytest
 from unittest.mock import Mock, patch
-from backend.middleware.correlation_id_middleware import CorrelationIDMiddleware, get_correlation_id
-from backend.utils.correlation_id_generator import (
+from middleware.correlation_id_middleware import CorrelationIDMiddleware, get_correlation_id
+from utils.correlation_id_generator import (
     generate_correlation_id,
     set_correlation_id,
     get_correlation_id_from_context,

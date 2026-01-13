@@ -3,9 +3,9 @@ Main FastAPI application for the Todo AI Chatbot
 """
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from backend.config import BackendConfig
-from backend.routers.chat_router import router as chat_router
-from backend.routers.auth_router import router as auth_router
+from config import BackendConfig
+from routers.chat_router import router as chat_router
+from routers.auth_router import router as auth_router
 import uvicorn
 
 
@@ -53,7 +53,7 @@ def run_server():
     config = BackendConfig()
 
     uvicorn.run(
-        "backend.main:app",
+        "main:app",
         host=config.SERVER_HOST,
         port=config.SERVER_PORT,
         reload=config.DEBUG

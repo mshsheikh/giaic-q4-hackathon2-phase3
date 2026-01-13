@@ -5,7 +5,7 @@ from typing import Callable, Awaitable
 from fastapi import Request, Response, HTTPException
 from starlette.middleware.base import BaseHTTPMiddleware, RequestResponseEndpoint
 from pydantic import ValidationError
-from backend.logging.config import log_with_context
+from logging.config import log_with_context
 import logging
 
 

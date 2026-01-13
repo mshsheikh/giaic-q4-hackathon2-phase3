@@ -7,7 +7,7 @@ import sys
 from datetime import datetime
 from pythonjsonlogger import jsonlogger
 from typing import Dict, Any, Optional
-from backend.middleware.correlation_id_middleware import get_correlation_id
+from middleware.correlation_id_middleware import get_correlation_id
 from fastapi import Request
 
 

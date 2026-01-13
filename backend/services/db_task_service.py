@@ -4,7 +4,7 @@ Database service for Task operations in the Todo AI Chatbot
 from sqlmodel import Session, select, and_, func
 from typing import List, Optional
 from uuid import UUID
-from backend.models.task import Task, TaskStatus
+from models.task import Task, TaskStatus
 from datetime import datetime
 
 

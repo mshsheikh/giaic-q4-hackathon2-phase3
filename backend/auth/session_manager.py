@@ -5,7 +5,7 @@ Handles session creation, validation, and management.
 import jwt
 from datetime import datetime, timedelta
 from typing import Dict, Any, Optional
-from backend.auth.config import AuthConfig
+from auth.config import AuthConfig
 import secrets
 import hashlib
 

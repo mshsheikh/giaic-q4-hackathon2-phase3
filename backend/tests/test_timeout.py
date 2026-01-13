@@ -4,8 +4,8 @@ Unit tests for timeout functionality
 import pytest
 import asyncio
 from unittest.mock import Mock, patch
-from backend.config.timeout_config import TimeoutConfig, get_timeout_config
-from backend.middleware.timeout_middleware import TimeoutMiddleware, get_timeout_for_endpoint
+from config.timeout_config import TimeoutConfig, get_timeout_config
+from middleware.timeout_middleware import TimeoutMiddleware, get_timeout_for_endpoint
 
 
 class TestTimeoutConfig:

@@ -3,8 +3,8 @@ Logout Handler for the Todo AI Chatbot
 Handles user logout and session cleanup.
 """
 from fastapi import Response
-from backend.auth.config import AuthConfig
-from backend.auth.session_manager import session_manager
+from auth.config import AuthConfig
+from auth.session_manager import session_manager
 from typing import Dict, Any
 
 

@@ -6,8 +6,8 @@ from contextlib import contextmanager
 from typing import Any, Dict, Optional, Generator
 from sqlalchemy.orm import Session
 from sqlalchemy import text
-from backend.database.connection import get_session_context
-from backend.config.timeout_config import get_timeout_config
+from database.connection import get_session_context
+from config.timeout_config import get_timeout_config
 
 
 class BaseService(ABC):

@@ -4,7 +4,7 @@ Database service for Message operations in the Todo AI Chatbot
 from sqlmodel import Session, select, and_
 from typing import List, Optional
 from uuid import UUID
-from backend.models.message import Message, MessageRole
+from models.message import Message, MessageRole
 from datetime import datetime
 
 
@@ -74,7 +74,7 @@ class DBMessageService:
             List of Message objects for the conversation
         """
         # First verify the user owns the conversation
-        from backend.services.db_conversation_service import DBConversationService
+        from services.db_conversation_service import DBConversationService
         conversation = DBConversationService.get_conversation_by_id(session, conversation_id, user_id)
         if not conversation:
             return []
@@ -118,7 +118,7 @@ class DBMessageService:
             List of Message objects with the specified role
         """
         # First verify the user owns the conversation
-        from backend.services.db_conversation_service import DBConversationService
+        from services.db_conversation_service import DBConversationService
         conversation = DBConversationService.get_conversation_by_id(session, conversation_id, user_id)
         if not conversation:
             return []
@@ -169,7 +169,7 @@ class DBMessageService:
         """
         from sqlalchemy import func
         # First verify the user owns the conversation
-        from backend.services.db_conversation_service import DBConversationService
+        from services.db_conversation_service import DBConversationService
         conversation = DBConversationService.get_conversation_by_id(session, conversation_id, user_id)
         if not conversation:
             return 0

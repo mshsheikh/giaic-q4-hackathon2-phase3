@@ -5,9 +5,9 @@ from typing import List, Tuple, Optional
 from datetime import datetime
 from uuid import UUID
 from sqlmodel import Session, select
-from backend.models.conversation import Conversation
-from backend.models.message import Message, MessageRole
-from backend.schemas.conversation_management_schemas import (
+from models.conversation import Conversation
+from models.message import Message, MessageRole
+from schemas.conversation_management_schemas import (
     ConversationCreateRequest,
     ConversationResponse,
     MessageResponse

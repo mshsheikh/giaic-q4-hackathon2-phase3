@@ -3,7 +3,7 @@ Unit tests for validation functionality
 """
 import pytest
 from pydantic import ValidationError
-from backend.schemas.validation_schemas import (
+from schemas.validation_schemas import (
     UserIdValidationSchema,
     TaskValidationSchema,
     ConversationValidationSchema,

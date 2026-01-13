@@ -6,7 +6,7 @@ import threading
 from enum import Enum
 from typing import Callable, Any, Optional, Dict, Tuple
 from functools import wraps
-from backend.config.circuit_breaker_config import get_circuit_breaker_config
+from config.circuit_breaker_config import get_circuit_breaker_config
 
 
 class CircuitState(Enum):

@@ -3,9 +3,9 @@ Authentication Router for the Todo AI Chatbot
 """
 from fastapi import APIRouter, Request, Response, HTTPException, status
 from fastapi.responses import JSONResponse
-from backend.auth.logout_handler import logout_handler
-from backend.auth.middleware import auth_middleware
-from backend.auth.session_manager import session_manager
+from auth.logout_handler import logout_handler
+from auth.middleware import auth_middleware
+from auth.session_manager import session_manager
 from typing import Dict, Any
 
 

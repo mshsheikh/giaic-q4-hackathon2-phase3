@@ -4,7 +4,7 @@ Rate Limit Service for Backend
 import time
 from typing import Dict, Optional, List
 from collections import defaultdict, deque
-from backend.config.rate_limit_config import get_rate_limit_config
+from config.rate_limit_config import get_rate_limit_config
 
 
 class RateLimitService:
