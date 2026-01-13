@@ -3,7 +3,7 @@ Main FastAPI application for the Todo AI Chatbot
 """
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from config.backend_config import BackendConfig
+from config import BackendConfig
 from routers.chat_router import router as chat_router
 from routers.auth_router import router as auth_router
 import uvicorn
