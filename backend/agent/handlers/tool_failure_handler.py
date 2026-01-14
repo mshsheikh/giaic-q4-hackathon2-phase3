@@ -5,7 +5,7 @@ from typing import Dict, Any, Optional
 import logging
 from datetime import datetime
 from ..utils.correlation_id_handler import get_agent_correlation_id_from_context
-from ..logging.config import log_with_context
+from ..app_logging.config import log_with_context
 
 
 class ToolFailureHandler:
