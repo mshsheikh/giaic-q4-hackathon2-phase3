@@ -29,10 +29,22 @@ export default function ChatPage() {
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   // Generate a random user ID for this session (in a real app, this would come from auth)
-  const userId = useRef<string>(localStorage.getItem('user_id') || uuidv4());
-  if (!localStorage.getItem('user_id')) {
-    localStorage.setItem('user_id', userId.current);
-  }
+  const [userId, setUserId] = useState<string>(() => {
+    // Initialize with a temporary ID during SSR
+    return '';
+  });
+
+  useEffect(() => {
+    // Access localStorage only on the client side
+    const storedUserId = localStorage.getItem('user_id');
+    if (storedUserId) {
+      setUserId(storedUserId);
+    } else {
+      const newUserId = uuidv4();
+      localStorage.setItem('user_id', newUserId);
+      setUserId(newUserId);
+    }
+  }, []);
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -44,7 +56,7 @@ export default function ChatPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!inputValue.trim() || isLoading) return;
+    if (!inputValue.trim() || isLoading || !userId) return;
 
     const userMessage = {
       id: uuidv4(),
@@ -58,7 +70,7 @@ export default function ChatPage() {
     setIsLoading(true);
 
     try {
-      const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_API_URL}/${userId.current}/chat`, {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_API_URL}/${userId}/chat`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -136,7 +148,7 @@ export default function ChatPage() {
         <div className="max-w-4xl mx-auto flex justify-between items-center">
           <h1 className="text-xl font-bold text-gray-800 dark:text-white">Todo AI Chatbot</h1>
           <div className="text-sm text-gray-500 dark:text-gray-400">
-            User: {userId.current.substring(0, 8)}...
+            User: {userId ? userId.substring(0, 8) + '...' : 'Loading...'}
           </div>
         </div>
       </header>
