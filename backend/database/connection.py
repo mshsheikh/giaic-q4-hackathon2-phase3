@@ -3,7 +3,7 @@ Database connection setup for the Todo AI Chatbot with Timeout Support
 """
 from sqlmodel import create_engine, Session
 from sqlalchemy import event, text
-from sqlalchemy.pool import Pool
+from sqlalchemy.pool import Pool, NullPool
 import os
 from typing import Generator
 from contextlib import contextmanager
@@ -19,11 +19,8 @@ DATABASE_URL = os.getenv("DATABASE_URL", "postgresql://user:password@localhost/t
 engine = create_engine(
     DATABASE_URL,
     echo=bool(os.getenv("DATABASE_ECHO", False)),  # Set DATABASE_ECHO to enable SQL logging
-    pool_pre_ping=True,  # Verify connections before use
-    pool_recycle=300,  # Recycle connections every 5 minutes
-    connect_args={
-        "options": f"-c statement_timeout={timeout_config.get_database_query_timeout() * 1000}"  # milliseconds
-    }
+    poolclass=NullPool,  # Use NullPool for Neon serverless
+    connect_args={}       # Remove statement_timeout from connect_args
 )
 
 
@@ -67,14 +64,5 @@ def create_db_and_tables():
     SQLModel.metadata.create_all(engine)
 
 
-# Listen for connection events for debugging/monitoring
-@event.listens_for(Pool, "connect")
-def set_sqlite_pragma(dbapi_connection, connection_record):
-    """
-    Set pragmas for SQLite if used (for development/testing).
-    This is a no-op for PostgreSQL.
-    """
-    if 'sqlite' in DATABASE_URL:
-        cursor = dbapi_connection.cursor()
-        cursor.execute("PRAGMA foreign_keys=ON")
-        cursor.close()
+# Event listener for SQLite pragmas has been removed for Neon serverless compatibility
+# The original SQLite pragma listener is no longer needed with NullPool
