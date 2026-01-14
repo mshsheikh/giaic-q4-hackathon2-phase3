@@ -9,6 +9,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from config import BackendConfig
 from routers.chat_router import router as chat_router
 from routers.auth_router import router as auth_router
+from database.connection import create_db_and_tables
 import uvicorn
 
 
@@ -31,6 +32,16 @@ app.add_middleware(
 # Include routers
 app.include_router(chat_router, prefix="/api", tags=["chat"])
 app.include_router(auth_router, prefix="/auth", tags=["auth"])
+
+
+# Initialize database tables on startup
+@app.on_event("startup")
+async def on_startup():
+    """
+    Initialize database tables when the application starts.
+    """
+    create_db_and_tables()
+
 
 # Add a health check endpoint
 @app.get("/health")
