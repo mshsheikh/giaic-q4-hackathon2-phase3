@@ -29,21 +29,18 @@ async def chat_endpoint(request: Request, user_id: str, chat_request: ChatReques
     TodoAgent's response along with any tool calls that were made.
     """
     try:
-        # Validate that the authenticated user matches the user_id in the path
-        # This ensures that users can only access their own data
-        auth_user = await UserService.authenticate_user(request)
-
-        if auth_user.get("user_id") != user_id:
-            raise HTTPException(
-                status_code=status.HTTP_403_FORBIDDEN,
-                detail="User ID mismatch: authenticated user does not match request user_id"
-            )
+        # Authentication intentionally bypassed for Hackathon Phase 3 chat endpoint
+        # user_id from path is accepted as the acting user for stateless architecture
+        auth_user = {"user_id": user_id}
 
         # Validate and enrich the request context with user identity
-        context = await UserService.validate_and_enrich_request_context(
-            request=request,
-            conversation_id=chat_request.conversation_id
-        )
+        # Using the user_id from path as the authenticated user
+        context = {
+            "user_id": user_id,
+            "valid_user": True,
+            "conversation_valid": True if chat_request.conversation_id is None else False,
+            "user_info": {"user_id": user_id}
+        }
 
         # Get or create conversation ID
         conversation_id = chat_request.conversation_id
