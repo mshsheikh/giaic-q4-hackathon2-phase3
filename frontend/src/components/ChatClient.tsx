@@ -53,7 +53,18 @@ export default function ChatClient() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!inputValue.trim() || isLoading || !userId) return;
+
+    // Fetch only runs after userId is initialized
+    if (!inputValue.trim() || isLoading || !userId) {
+      if (!userId) {
+        console.warn('userId is not initialized yet');
+      }
+      return;
+    }
+
+    // Log for dev verification
+    console.log('Backend URL:', process.env.NEXT_PUBLIC_BACKEND_API_URL);
+    console.log('User ID:', userId);
 
     const userMessage = {
       id: uuidv4(),

@@ -51,6 +51,14 @@ async def health_check():
     """
     return {"status": "healthy", "service": "Todo AI Chatbot API"}
 
+# Add a test endpoint for dev and fetch testing
+@app.get("/api/test")
+async def test_endpoint():
+    """
+    Test endpoint for development and fetch testing.
+    """
+    return {"status": "ok"}
+
 # Add a root endpoint
 @app.get("/")
 async def root():
