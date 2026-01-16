@@ -29,6 +29,18 @@ async def chat_endpoint(request: Request, user_id: str, chat_request: ChatReques
     TodoAgent's response along with any tool calls that were made.
     """
     try:
+        # DB preflight check
+        try:
+            from sqlalchemy import text
+            with get_session_context() as session:
+                session.execute(text("SELECT 1"))
+        except Exception as db_error:
+            from fastapi.responses import JSONResponse
+            return JSONResponse(
+                status_code=500,
+                content={"error": "db_unavailable", "message": "Database is currently unavailable"}
+            )
+
         # Authentication intentionally bypassed for Hackathon Phase 3 chat endpoint
         # user_id from path is accepted as the acting user for stateless architecture
         auth_user = {"user_id": user_id}
@@ -45,10 +57,13 @@ async def chat_endpoint(request: Request, user_id: str, chat_request: ChatReques
         # Get or create conversation ID
         conversation_id = chat_request.conversation_id
         if not conversation_id:
-            # Create a new conversation
-            conversation_service = ConversationService()
-            conversation = await conversation_service.create_conversation(user_id)
-            conversation_id = str(conversation.id)
+            # Create a new conversation and get its ID within the session
+            from database.connection import get_session_context
+            from services.db_conversation_service import DBConversationService
+            with get_session_context() as session:
+                conversation = DBConversationService.create_conversation(session, user_id)
+                conversation_id = str(conversation.id)
+                session.refresh(conversation)  # Refresh to ensure attributes are loaded
         else:
             # Validate that the conversation belongs to the user
             conversation_service = ConversationService()
@@ -58,6 +73,7 @@ async def chat_endpoint(request: Request, user_id: str, chat_request: ChatReques
                     status_code=status.HTTP_404_NOT_FOUND,
                     detail="Conversation not found or does not belong to user"
                 )
+            conversation_id = str(conversation.id) if hasattr(conversation, 'id') else conversation_id
 
         # Save the user's message to the database
         message_service = DBMessageService()
@@ -130,15 +146,41 @@ async def chat_endpoint(request: Request, user_id: str, chat_request: ChatReques
         # Re-raise HTTP exceptions
         raise
     except Exception as e:
+        import logging
+        logger = logging.getLogger("todo-api")
+        logger.exception("Unhandled exception in chat endpoint: %s", e)
+        # Handle any other exceptions - ensure conversation_id is a string or None converted to ""
+        safe_conversation_id = chat_request.conversation_id or ""
         # Handle any other exceptions
         error_response = ChatResponse(
             success=False,
-            conversation_id=chat_request.conversation_id,
+            conversation_id=safe_conversation_id,
             response="",
             tool_calls=[],
             error={
                 "code": "INTERNAL_ERROR",
-                "message": f"An internal error occurred: {str(e)}"
+                "message": "An internal server error occurred"
             }
         )
         return error_response
+
+
+@router.get("/test-db")
+async def test_db_endpoint():
+    """
+    Test endpoint to check database connectivity.
+    """
+    try:
+        from sqlalchemy import text
+        from database.connection import get_session_context
+
+        with get_session_context() as session:
+            session.execute(text("SELECT 1"))
+
+        return {"db": "ok"}
+    except Exception as e:
+        from fastapi.responses import JSONResponse
+        return JSONResponse(
+            status_code=500,
+            content={"error": "db_unavailable", "message": "Database is currently unavailable"}
+        )

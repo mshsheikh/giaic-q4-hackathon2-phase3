@@ -54,7 +54,7 @@ export default function ChatClient() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    // Fetch only runs after userId is initialized
+    // Early return if userId is not initialized
     if (!inputValue.trim() || isLoading || !userId) {
       if (!userId) {
         console.warn('userId is not initialized yet');
@@ -62,9 +62,15 @@ export default function ChatClient() {
       return;
     }
 
-    // Log for dev verification
-    console.log('Backend URL:', process.env.NEXT_PUBLIC_BACKEND_API_URL);
-    console.log('User ID:', userId);
+    // Mask function for logging
+    const maskSecret = (secret: string) => {
+      if (!secret || secret.length <= 8) return '*'.repeat(Math.max(secret?.length || 0, 1));
+      return secret.substring(0, 4) + '*'.repeat(secret.length - 8) + secret.substring(secret.length - 4);
+    };
+
+    // Log masked backend URL and userId
+    console.log('Backend:', maskSecret(process.env.NEXT_PUBLIC_BACKEND_API_URL || ''));
+    console.log('User ID:', maskSecret(userId));
 
     const userMessage = {
       id: uuidv4(),
@@ -77,56 +83,107 @@ export default function ChatClient() {
     setInputValue('');
     setIsLoading(true);
 
-    try {
-      const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_API_URL}/${userId}/chat`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          message: inputValue,
-          conversation_id: conversationId,
-        }),
-      });
+    // Robust fetch with timeout and retries
+    let retryCount = 0;
+    const maxRetries = 2;
+    const retryDelays = [500, 1500]; // Exponential backoff: 0.5s, 1.5s
 
-      const data: ChatResponse = await response.json();
+    while (retryCount <= maxRetries) {
+      try {
+        // Create AbortController for timeout
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 25000); // 25s timeout
 
-      if (data.success) {
-        if (!conversationId) {
-          setConversationId(data.conversation_id);
+        const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_API_URL}/${userId}/chat`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            message: inputValue,
+            conversation_id: conversationId,
+          }),
+          signal: controller.signal,
+        });
+
+        clearTimeout(timeoutId);
+
+        const data: ChatResponse = await response.json();
+
+        if (data.success) {
+          if (!conversationId) {
+            setConversationId(data.conversation_id);
+          }
+
+          // Add assistant message to the chat
+          const assistantMessage = {
+            id: uuidv4(),
+            content: data.response,
+            role: 'assistant' as const,
+            tool_calls: data.tool_calls,
+          };
+
+          setMessages(prev => [...prev, assistantMessage]);
+        } else {
+          // Add error message to the chat
+          const errorMessage = {
+            id: uuidv4(),
+            content: data.error?.message || 'An error occurred',
+            role: 'assistant' as const,
+          };
+
+          setMessages(prev => [...prev, errorMessage]);
         }
 
-        // Add assistant message to the chat
-        const assistantMessage = {
-          id: uuidv4(),
-          content: data.response,
-          role: 'assistant' as const,
-          tool_calls: data.tool_calls,
-        };
+        break; // Success, exit retry loop
+      } catch (error) {
+        // Check if it was an abort error (timeout)
+        if (error instanceof Error && error.name === 'AbortError') {
+          // Timeout occurred
+          if (retryCount < maxRetries) {
+            console.warn(`Request timed out, retrying (${retryCount + 1}/${maxRetries})...`);
+            setMessages(prev => [...prev, {
+              id: uuidv4(),
+              content: `Server is taking longer than expected — retrying...`,
+              role: 'assistant' as const,
+            }]);
 
-        setMessages(prev => [...prev, assistantMessage]);
-      } else {
-        // Add error message to the chat
+            await new Promise(resolve => setTimeout(resolve, retryDelays[retryCount]));
+            retryCount++;
+            continue;
+          }
+        } else if (error instanceof TypeError && error.message.includes('fetch')) {
+          // Network error
+          if (retryCount < maxRetries) {
+            console.warn(`Network error, retrying (${retryCount + 1}/${maxRetries})...`);
+            setMessages(prev => [...prev, {
+              id: uuidv4(),
+              content: `Server is taking longer than expected — retrying...`,
+              role: 'assistant' as const,
+            }]);
+
+            await new Promise(resolve => setTimeout(resolve, retryDelays[retryCount]));
+            retryCount++;
+            continue;
+          }
+        } else {
+          // Other error
+          console.error('Error sending message:', error);
+        }
+
+        // If we've exhausted retries or it's another kind of error
         const errorMessage = {
           id: uuidv4(),
-          content: data.error?.message || 'An error occurred',
+          content: 'Failed to send message. Please try again later.',
           role: 'assistant' as const,
         };
 
         setMessages(prev => [...prev, errorMessage]);
+        break;
       }
-    } catch (error) {
-      console.error('Error sending message:', error);
-      const errorMessage = {
-        id: uuidv4(),
-        content: 'Failed to send message. Please try again.',
-        role: 'assistant' as const,
-      };
-
-      setMessages(prev => [...prev, errorMessage]);
-    } finally {
-      setIsLoading(false);
     }
+
+    setIsLoading(false);
   };
 
   const formatToolCall = (toolCall: ToolCall) => {

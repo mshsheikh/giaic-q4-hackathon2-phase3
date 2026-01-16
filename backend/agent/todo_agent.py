@@ -233,3 +233,35 @@ class TodoAgent:
         Close the agent and clean up resources
         """
         await self.tool_registry.close()
+
+    async def validate_agent_setup(self) -> Dict[str, Any]:
+        """
+        Validation function to check agent setup without affecting production requests.
+
+        Returns:
+            Dictionary with validation results
+        """
+        validation_results = {
+            "model_api_key_present": bool(self.config.OPENAI_API_KEY),
+            "mcp_tools": {}
+        }
+
+        # Check if required tools are available
+        required_tools = ["add_task", "list_tasks", "complete_task", "delete_task", "update_task"]
+
+        for tool_name in required_tools:
+            try:
+                # Just check if the tool exists in the registry
+                tool_exists = hasattr(self.tool_registry, '_tools') and tool_name in self.tool_registry._tools
+                validation_results["mcp_tools"][tool_name] = {
+                    "available": tool_exists,
+                    "callable": tool_exists  # Simplified check
+                }
+            except Exception as e:
+                validation_results["mcp_tools"][tool_name] = {
+                    "available": False,
+                    "callable": False,
+                    "error": str(e)
+                }
+
+        return validation_results
