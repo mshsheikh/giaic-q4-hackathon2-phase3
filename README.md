@@ -1,210 +1,171 @@
-# Todo AI Chatbot
+# Todo AI Chatbot 🤖
 
-A state-of-the-art AI-powered todo management system that understands natural language requests and manages tasks through intelligent agent interactions.
+> **Intelligent Task Management with AI-Powered Conversations**
 
-## Table of Contents
-- [Features](#features)
-- [Architecture](#architecture)
-- [Installation](#installation)
-- [Usage](#usage)
-- [Demo Instructions](#demo-instructions-for-judges)
-- [System Capabilities](#system-capabilities)
-- [Technical Details](#technical-details)
-- [Troubleshooting](#troubleshooting)
+Transform your task management experience with an AI-powered chatbot that understands natural language and seamlessly integrates with your workflow.
 
-## Features
+## 🌟 Features
 
-### Core Functionality
-- **Natural Language Processing**: Understands and processes natural language requests to manage todo lists
-- **Task Management**: Create, list, complete, update, and delete tasks using conversational AI
-- **Multi-User Support**: Secure, isolated task management for multiple users
-- **Real-time Interaction**: Immediate responses to user requests with visual feedback
+- **Conversational AI Interface** - Interact with your todo list using natural language
+- **Smart Task Management** - Add, list, update, complete, and delete tasks via chat
+- **Real-time Processing** - Instant responses with advanced AI reasoning
+- **Secure Authentication** - Enterprise-grade security and privacy protection
+- **Scalable Architecture** - Built for high availability and performance
+- **MCP Integration** - Modular tool architecture supporting extensible functionality
 
-### Advanced Features
-- **Multi-Conversation Support**: Manage multiple conversation contexts simultaneously
-- **Conversation Naming**: Assign meaningful names to conversations for easy identification
-- **Tool Call Visualization**: See exactly what actions the AI agent performs in real-time
-- **Debug Mode**: Toggle for detailed logging and intermediate step visibility
+## 🛠️ Tech Stack
 
-### Production Features
-- **Observability**: End-to-end correlation IDs, structured logging, and health checks
-- **Reliability**: Timeout handling, graceful error recovery, and circuit breakers
-- **Security**: Input validation, rate limiting, and proper user isolation
-- **Scalability**: Stateless architecture supporting horizontal scaling
+![Next.js](https://img.shields.io/badge/Next.js-14+-000000?style=for-the-badge&logo=next.js&logoColor=white)
+![FastAPI](https://img.shields.io/badge/FastAPI-0.104+-0056D3?style=for-the-badge&logo=fastapi&logoColor=white)
+![PostgreSQL](https://img.shields.io/badge/PostgreSQL-Neon-336791?style=for-the-badge&logo=postgresql&logoColor=white)
+![SQLModel](https://img.shields.io/badge/SQLModel-0.0.16-29BEB0?style=for-the-badge&logo=python&logoColor=white)
+![OpenAI](https://img.shields.io/badge/OpenAI-API-412991?style=for-the-badge&logo=openai&logoColor=white)
 
-## Architecture
+### Backend Technologies
+- **FastAPI** - High-performance web framework with automatic API documentation
+- **SQLModel** - SQL database modeling with Pydantic and SQLAlchemy integration
+- **PostgreSQL** - Robust, scalable database with Neon serverless support
+- **OpenAI API** - Advanced language models for natural language processing
+- **MCP Framework** - Modular tool architecture for extensible AI capabilities
 
-### System Components
-```
-┌─────────────────┐    ┌──────────────────┐    ┌─────────────────┐
-│   Frontend      │    │     Agent        │    │   MCP Tools     │
-│   (ChatKit)     │◄──►│  (OpenAI SDK)    │◄──►│  (Database)     │
-│                 │    │                  │    │                 │
-│ - React UI      │    │ - Natural        │    │ - add_task      │
-│ - Conversation  │    │   Language       │    │ - list_tasks    │
-│   Management    │    │   Processing     │    │ - complete_task │
-│ - Tool Call     │    │ - Context        │    │ - delete_task   │
-│   Visualization │    │   Handling       │    │ - update_task   │
-└─────────────────┘    └──────────────────┘    └─────────────────┘
-```
+### Frontend Technologies
+- **Next.js 14+** - React framework with App Router and server-side rendering
+- **TypeScript** - Type-safe JavaScript for improved developer experience
+- **Tailwind CSS** - Utility-first CSS framework for rapid UI development
 
-### Technology Stack
-- **Frontend**: Next.js with OpenAI ChatKit
-- **Agent**: OpenAI API with Function Calling
-- **Backend**: FastAPI with SQLModel
-- **Database**: PostgreSQL with Neon
-- **Authentication**: Better Auth
-- **MCP Tools**: Model Context Protocol SDK
-- **Containerization**: Docker & Docker Compose
-
-## Installation
+## 🚀 Quick Start
 
 ### Prerequisites
-- Docker and Docker Compose
-- Node.js (for frontend development)
-- Python 3.9+ (for backend development)
-- OpenAI API key
+- Node.js 18+
+- Python 3.9+
+- PostgreSQL (or Neon account)
 
-### Setup
-1. Clone the repository:
-   ```bash
-   git clone <repository-url>
-   cd giaic-q4-hackathon2-phase3
-   ```
+### Installation
 
-2. Copy the environment template and configure your keys:
-   ```bash
-   cp .env.example .env
-   # Edit .env and add your OpenAI API key and other configuration
-   ```
+1. **Clone the repository**
+```bash
+git clone https://github.com/username/todo-ai-chatbot.git
+cd todo-ai-chatbot
+```
 
-3. Start the system using Docker Compose:
-   ```bash
-   docker-compose -f docker/docker-compose.dev.yml up -d
-   ```
+2. **Install backend dependencies**
+```bash
+cd backend
+pip install -r requirements.txt
+```
 
-4. The system will be available at:
-   - Frontend: http://localhost:3000
-   - Backend: http://localhost:8000
-   - MCP Server: http://localhost:8001
+3. **Install frontend dependencies**
+```bash
+cd ../frontend
+npm install
+```
 
-## Usage
+4. **Configure environment variables**
+```bash
+# Backend (.env)
+DATABASE_URL="postgresql://user:password@localhost:5432/todo_chatbot"
+OPENAI_API_KEY="your-openai-api-key"
+AUTH_SECRET="your-auth-secret"
+JWT_SECRET="your-jwt-secret"
+```
 
-### Basic Commands
-- "Add 'buy groceries' to my list" - Creates a new task
-- "Show me my tasks" - Lists all current tasks
-- "Complete 'buy groceries'" - Marks task as completed
-- "Update 'buy groceries' to 'buy groceries and milk'" - Modifies existing task
-- "Delete 'buy groceries'" - Removes task from list
+```bash
+# Frontend (.env.local)
+NEXT_PUBLIC_BACKEND_API_URL="http://localhost:8000/api"
+NEXT_PUBLIC_OPENAI_DOMAIN_KEY="domain_key_here"
+```
 
-### Advanced Features
-- **Conversation Management**: Use the sidebar to create, switch, and manage conversations
-- **Naming Conversations**: Click "Rename" to assign meaningful names to conversations
-- **Debug Mode**: Toggle the debug button in the bottom-right to see detailed processing
-- **Tool Visualization**: Watch real-time tool calls as the AI processes your requests
+5. **Start the applications**
+```bash
+# Terminal 1 - Start backend
+cd backend
+uvicorn main:app --reload
 
-## Demo Instructions for Judges
+# Terminal 2 - Start frontend
+cd frontend
+npm run dev
+```
 
-### Pre-Demo Setup
-1. Ensure all services are running:
-   ```bash
-   docker-compose -f docker/docker-compose.dev.yml ps
-   ```
-2. Verify the system is responsive at http://localhost:3000
-3. Prepare sample user accounts if needed
+6. **Access the application**
+- Frontend: [http://localhost:3000](http://localhost:3000)
+- Backend API: [http://localhost:8000](http://localhost:8000)
+- Backend Docs: [http://localhost:8000/docs](http://localhost:8000/docs)
 
-### Demo Flow
-1. **Opening (2 minutes)**: Introduce the system's purpose and architecture
-2. **Core Functionality (8 minutes)**: Demonstrate all 5 basic operations (add, list, complete, update, delete)
-3. **Advanced Features (5 minutes)**: Showcase conversation management, observability, and error handling
-4. **Q&A (2 minutes)**: Address questions about architecture and implementation
+## 💡 Usage Examples
 
-### Sample Demo Prompts
-- "I need to remember to call the doctor tomorrow" (add task)
-- "What tasks do I have?" (list tasks)
-- "I called the doctor, mark it as done" (complete task)
-- "Change 'call the doctor' to 'schedule doctor appointment'" (update task)
-- "Remove the doctor task" (delete task)
+### Natural Language Interactions
+```
+User: "Add a task to buy groceries"
+Bot: "I've added the task 'buy groceries' to your list!"
 
-### Expected Outcomes
-- Natural language requests processed accurately
-- Tool calls visualized in real-time
-- Conversations managed properly with naming
-- Error handling demonstrated gracefully
+User: "Show me all my tasks"
+Bot: "Here are your tasks: 1. Buy groceries [pending] 2. Complete project [pending]"
 
-## System Capabilities
-
-### Natural Language Understanding
-- Processes complex sentences and requests
-- Handles ambiguous or incomplete information gracefully
-- Maintains context across conversation turns
-- Supports various ways to express the same intent
-
-### Task Operations
-- **Add Task**: Creates new tasks with optional descriptions and priorities
-- **List Tasks**: Retrieves tasks with filtering and pagination
-- **Complete Task**: Updates task status to completed
-- **Update Task**: Modifies task details while preserving history
-- **Delete Task**: Removes tasks permanently
-
-### Observability Features
-- **Correlation IDs**: End-to-end request tracing across services
-- **Structured Logging**: JSON-formatted logs with contextual information
-- **Tool Call Visualization**: Real-time display of agent actions
-- **Health Checks**: Comprehensive system health monitoring
-- **Debug Mode**: Detailed internal process visibility
-
-### Reliability & Safety
-- **Timeout Handling**: Configurable timeouts for all operations
-- **Rate Limiting**: Protection against abuse and excessive usage
-- **Circuit Breakers**: Fault isolation and graceful degradation
-- **Input Validation**: Comprehensive validation and sanitization
-- **Error Recovery**: Graceful handling of system failures
-
-## Technical Details
-
-### Database Schema
-- **Task**: id, user_id, title, description, status, timestamps
-- **Conversation**: id, user_id, name, description, timestamps
-- **Message**: id, user_id, conversation_id, role, content, timestamps
+User: "Mark the groceries task as done"
+Bot: "I've marked 'buy groceries' as completed!"
+```
 
 ### API Endpoints
+- `GET /health` - Health check endpoint
+- `GET /api/test` - Test endpoint for deployment verification
+- `GET /api/test-db` - Database connectivity check
 - `POST /api/{user_id}/chat` - Main chat interface
-- `GET/POST/PUT/DELETE /conversations/` - Conversation management
-- `GET /health` - System health check
-- `GET /health/ready` - Readiness probe
-- `GET /health/live` - Liveness probe
 
-### Security Measures
-- User isolation via user_id scoping
-- Input validation at all boundaries
-- Rate limiting to prevent abuse
-- Proper authentication and authorization
-- SQL injection prevention through ORM
+## 🔧 Architecture Overview
 
-## Troubleshooting
+```
+┌─────────────────┐    ┌──────────────────┐    ┌─────────────────┐
+│   Frontend      │◄──►│    Backend       │◄──►│   PostgreSQL    │
+│   (Next.js)     │    │   (FastAPI)      │    │   (Neon)        │
+└─────────────────┘    └──────────────────┘    └─────────────────┘
+                              │
+                       ┌──────────────────┐
+                       │   OpenAI API     │
+                       │   (GPT-4o)       │
+                       └──────────────────┘
+                              │
+                       ┌──────────────────┐
+                       │   MCP Tools      │
+                       │   (Extensible)   │
+                       └──────────────────┘
+```
 
-### Common Issues
-- **Slow Responses**: Natural language processing typically takes 3-8 seconds
-- **API Key Issues**: Verify OpenAI API key is correctly configured
-- **Database Connectivity**: Check database connection and credentials
-- **MCP Server**: Ensure MCP tools are properly registered and accessible
+## 🤝 Contributing
 
-### Debugging
-- Enable debug mode for detailed internal logging
-- Check correlation IDs for request tracing
-- Review structured logs for error details
-- Use health endpoints to verify system status
+We welcome contributions from the community! To contribute:
 
-### Performance
-- Response times: 3-8 seconds for typical requests
-- Concurrency: System handles multiple simultaneous users
-- Scalability: Stateless design supports horizontal scaling
+1. Fork the repository
+2. Create a feature branch (`git checkout -b feature/amazing-feature`)
+3. Make your changes
+4. Add tests if applicable
+5. Submit a pull request
+
+### Development Guidelines
+- Follow the existing code style and patterns
+- Write clear, descriptive commit messages
+- Update documentation as needed
+- Ensure all tests pass before submitting
+
+## 📞 Contact
+
+For questions, support, or feedback:
+
+- **Issues**: [GitHub Issues](https://github.com/username/todo-ai-chatbot/issues)
+- **Email**: support@todoai.example.com
+- **Discord**: [Join our community](https://discord.gg/todoai)
+
+## 📄 License
+
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
 ---
 
-## Contributing
-Contributions are welcome! Please feel free to submit a Pull Request.
+<div align="center">
 
-## License
-This project is licensed under the MIT License.
+**Made with ❤️ by the Todo AI Team**
+
+[![GitHub stars](https://img.shields.io/github/stars/username/todo-ai-chatbot?style=social)](https://github.com/username/todo-ai-chatbot/stargazers)
+[![GitHub forks](https://img.shields.io/github/forks/username/todo-ai-chatbot?style=social)](https://github.com/username/todo-ai-chatbot/network/members)
+[![Twitter Follow](https://img.shields.io/twitter/follow/todoai?style=social)](https://twitter.com/todoai)
+
+</div>
