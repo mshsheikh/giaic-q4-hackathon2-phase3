@@ -20,8 +20,11 @@ engine = create_engine(
     DATABASE_URL,
     echo=bool(os.getenv("DATABASE_ECHO", False)),  # Set DATABASE_ECHO to enable SQL logging
     poolclass=NullPool,  # Use NullPool for Neon serverless
-    connect_args={}       # Remove statement_timeout from connect_args
+    pool_pre_ping=True,  # Verify connections before use
+    connect_args={"sslmode": "require"}  # Required for Neon
 )
+
+print("DB engine initialized with NullPool for serverless safety")
 
 
 def get_session() -> Generator[Session, None, None]:
