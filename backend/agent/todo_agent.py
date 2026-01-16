@@ -54,7 +54,7 @@ class TodoAgent:
         """
         await self.tool_registry.initialize_tools()
 
-    async def process_request(self, user_message: str, user_id: str, conversation_history: List[Dict[str, str]] = None) -> Dict[str, Any]:
+    async def process_request(self, user_message: str, user_id: str, conversation_history: List[Dict[str, str]] = None, session=None) -> Dict[str, Any]:
         """
         Process a user request and return the agent's response.
 
@@ -62,6 +62,7 @@ class TodoAgent:
             user_message: The message from the user
             user_id: The ID of the user making the request
             conversation_history: Previous messages in the conversation (optional)
+            session: Optional database session to use for tool calls
 
         Returns:
             Dictionary containing the agent's response and any tool calls made
@@ -182,8 +183,8 @@ class TodoAgent:
                     if "user_id" not in function_args:
                         function_args["user_id"] = user_id
 
-                    # Call the appropriate MCP tool via the registry
-                    result = await self.tool_registry.call_tool(function_name, function_args)
+                    # Call the appropriate MCP tool via the registry, passing the session
+                    result = await self.tool_registry.call_tool(function_name, function_args, session)
                     tool_results.append({
                         "tool_call_id": tool_call.id,
                         "result": result

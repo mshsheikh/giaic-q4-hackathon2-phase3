@@ -15,13 +15,14 @@ class TaskTools:
     """
 
     @staticmethod
-    async def add_task(parameters: Dict[str, Any]) -> Dict[str, Any]:
+    async def add_task(parameters: Dict[str, Any], session=None) -> Dict[str, Any]:
         """
         Add a new task to the database
 
         Args:
             parameters: Dictionary containing task details
                        Expected: user_id, title, description (optional)
+            session: Optional database session to use (if None, creates a new one for backward compatibility)
 
         Returns:
             Dictionary with success status and task details
@@ -41,7 +42,17 @@ class TaskTools:
                     }
                 }
 
-            with get_session_context() as session:
+            # Use provided session or create a new one for backward compatibility
+            if session is None:
+                with get_session_context() as new_session:
+                    task_service = DBTaskService()
+                    task = task_service.create_task(
+                        session=new_session,
+                        user_id=user_id,
+                        title=title,
+                        description=description
+                    )
+            else:
                 task_service = DBTaskService()
                 task = task_service.create_task(
                     session=session,
@@ -77,13 +88,14 @@ class TaskTools:
             }
 
     @staticmethod
-    async def list_tasks(parameters: Dict[str, Any]) -> Dict[str, Any]:
+    async def list_tasks(parameters: Dict[str, Any], session=None) -> Dict[str, Any]:
         """
         List tasks from the database
 
         Args:
             parameters: Dictionary containing filter options
                        Expected: user_id, status (optional)
+            session: Optional database session to use (if None, creates a new one for backward compatibility)
 
         Returns:
             Dictionary with success status and list of tasks
@@ -119,7 +131,12 @@ class TaskTools:
                         }
                     }
 
-            with get_session_context() as session:
+            # Use provided session or create a new one for backward compatibility
+            if session is None:
+                with get_session_context() as new_session:
+                    task_service = DBTaskService()
+                    tasks = task_service.get_tasks_by_user(new_session, user_id, status)
+            else:
                 task_service = DBTaskService()
                 tasks = task_service.get_tasks_by_user(session, user_id, status)
 
@@ -155,13 +172,14 @@ class TaskTools:
             }
 
     @staticmethod
-    async def complete_task(parameters: Dict[str, Any]) -> Dict[str, Any]:
+    async def complete_task(parameters: Dict[str, Any], session=None) -> Dict[str, Any]:
         """
         Mark a task as completed in the database
 
         Args:
             parameters: Dictionary containing task details
                        Expected: user_id, task_id
+            session: Optional database session to use (if None, creates a new one for backward compatibility)
 
         Returns:
             Dictionary with success status and updated task
@@ -192,7 +210,12 @@ class TaskTools:
                     }
                 }
 
-            with get_session_context() as session:
+            # Use provided session or create a new one for backward compatibility
+            if session is None:
+                with get_session_context() as new_session:
+                    task_service = DBTaskService()
+                    task = task_service.complete_task(new_session, task_id, user_id)
+            else:
                 task_service = DBTaskService()
                 task = task_service.complete_task(session, task_id, user_id)
 
@@ -233,13 +256,14 @@ class TaskTools:
             }
 
     @staticmethod
-    async def delete_task(parameters: Dict[str, Any]) -> Dict[str, Any]:
+    async def delete_task(parameters: Dict[str, Any], session=None) -> Dict[str, Any]:
         """
         Delete a task from the database
 
         Args:
             parameters: Dictionary containing task details
                        Expected: user_id, task_id
+            session: Optional database session to use (if None, creates a new one for backward compatibility)
 
         Returns:
             Dictionary with success status and deleted task ID
@@ -270,7 +294,12 @@ class TaskTools:
                     }
                 }
 
-            with get_session_context() as session:
+            # Use provided session or create a new one for backward compatibility
+            if session is None:
+                with get_session_context() as new_session:
+                    task_service = DBTaskService()
+                    success = task_service.delete_task(new_session, task_id, user_id)
+            else:
                 task_service = DBTaskService()
                 success = task_service.delete_task(session, task_id, user_id)
 
@@ -300,13 +329,14 @@ class TaskTools:
             }
 
     @staticmethod
-    async def update_task(parameters: Dict[str, Any]) -> Dict[str, Any]:
+    async def update_task(parameters: Dict[str, Any], session=None) -> Dict[str, Any]:
         """
         Update a task in the database
 
         Args:
             parameters: Dictionary containing task details
                        Expected: user_id, task_id, and at least one of: title, description, status
+            session: Optional database session to use (if None, creates a new one for backward compatibility)
 
         Returns:
             Dictionary with success status and updated task
@@ -368,7 +398,19 @@ class TaskTools:
                         }
                     }
 
-            with get_session_context() as session:
+            # Use provided session or create a new one for backward compatibility
+            if session is None:
+                with get_session_context() as new_session:
+                    task_service = DBTaskService()
+                    task = task_service.update_task(
+                        session=new_session,
+                        task_id=task_id,
+                        user_id=user_id,
+                        title=title,
+                        description=description,
+                        status=status
+                    )
+            else:
                 task_service = DBTaskService()
                 task = task_service.update_task(
                     session=session,

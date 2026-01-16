@@ -40,13 +40,14 @@ class ToolRegistry:
         """
         self.tools[name] = handler
 
-    async def call_tool(self, name: str, parameters: Dict[str, Any]) -> Dict[str, Any]:
+    async def call_tool(self, name: str, parameters: Dict[str, Any], session=None) -> Dict[str, Any]:
         """
         Call a registered tool with the given parameters.
 
         Args:
             name: Name of the tool to call
             parameters: Parameters to pass to the tool
+            session: Optional database session to use (if None, tools will create their own)
 
         Returns:
             Result of the tool call
@@ -61,7 +62,7 @@ class ToolRegistry:
             }
 
         try:
-            result = await self.tools[name](parameters)
+            result = await self.tools[name](parameters, session)
             return result
         except Exception as e:
             return {

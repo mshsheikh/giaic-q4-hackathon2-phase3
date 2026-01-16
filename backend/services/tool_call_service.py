@@ -21,7 +21,8 @@ class ToolCallService:
         conversation_id: str,
         tool_name: str,
         parameters: Dict[str, Any],
-        result: Dict[str, Any]
+        result: Dict[str, Any],
+        session=None
     ) -> None:
         """
         Log a tool call made by the agent.
@@ -32,9 +33,22 @@ class ToolCallService:
             tool_name: Name of the tool that was called
             parameters: Parameters passed to the tool
             result: Result returned by the tool
+            session: Optional database session to use (if None, creates a new one for backward compatibility)
         """
         # Create a message to represent the tool call in the conversation
-        with get_session_context() as session:
+        if session is None:
+            with get_session_context() as new_session:
+                # Create a message representing the tool call
+                tool_message_content = f"Tool '{tool_name}' called with parameters: {parameters}\nResult: {result}"
+
+                DBMessageService.create_message(
+                    session=new_session,
+                    user_id=user_id,
+                    conversation_id=UUID(conversation_id),
+                    role=MessageRole.TOOL,
+                    content=tool_message_content
+                )
+        else:
             # Create a message representing the tool call
             tool_message_content = f"Tool '{tool_name}' called with parameters: {parameters}\nResult: {result}"
 
@@ -50,7 +64,8 @@ class ToolCallService:
     async def log_multiple_tool_calls(
         user_id: str,
         conversation_id: str,
-        tool_calls: List[Dict[str, Any]]
+        tool_calls: List[Dict[str, Any]],
+        session=None
     ) -> None:
         """
         Log multiple tool calls made by the agent in a single request.
@@ -59,6 +74,7 @@ class ToolCallService:
             user_id: ID of the user who initiated the conversation
             conversation_id: ID of the conversation where the tools were called
             tool_calls: List of tool call dictionaries with name, parameters, and result
+            session: Optional database session to use (if None, tools will create their own)
         """
         for tool_call in tool_calls:
             await ToolCallService.log_tool_call(
@@ -66,7 +82,8 @@ class ToolCallService:
                 conversation_id=conversation_id,
                 tool_name=tool_call.get("tool_name", "unknown"),
                 parameters=tool_call.get("parameters", {}),
-                result=tool_call.get("result", {})
+                result=tool_call.get("result", {}),
+                session=session
             )
 
     @staticmethod

@@ -80,29 +80,30 @@ async def chat_endpoint(request: Request, user_id: str, chat_request: ChatReques
         conversation_service = ConversationService()
         conversation_history = await conversation_service.get_conversation_history(conversation_id, user_id)
 
-        # Process the message with the agent
+        # Process the message with the agent, passing the same session
         agent_result = await agent.process_request(
             user_message=chat_request.message,
             user_id=user_id,
-            conversation_history=conversation_history
+            conversation_history=conversation_history,
+            session=session  # Use the same session created at the beginning
         )
 
-        # Save the agent's response to the database
-        with Session(engine) as session:
-            agent_message = DBMessageService.create_message(
-                session=session,
-                user_id=user_id,
-                conversation_id=UUID(conversation_id),
-                role=MessageRole.ASSISTANT,
-                content=agent_result["response"]
-            )
+        # Save the agent's response to the database using the same session
+        agent_message = DBMessageService.create_message(
+            session=session,
+            user_id=user_id,
+            conversation_id=UUID(conversation_id),
+            role=MessageRole.ASSISTANT,
+            content=agent_result["response"]
+        )
 
-        # Log tool calls that were made
+        # Log tool calls that were made using the same session
         if agent_result["tool_calls"]:
             await ToolCallService.log_multiple_tool_calls(
                 user_id=user_id,
                 conversation_id=conversation_id,
-                tool_calls=agent_result["tool_calls"]
+                tool_calls=agent_result["tool_calls"],
+                session=session  # Use the same session created at the beginning
             )
 
         # Format tool calls for the response
