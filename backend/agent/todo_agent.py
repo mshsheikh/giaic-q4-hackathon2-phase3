@@ -104,7 +104,7 @@ class TodoAgent:
             # Use the new OpenAI Agents SDK pattern
             # Since the exact method calls may vary by implementation, we'll maintain
             # the existing function calling approach with the updated agent structure
-            agent = Agent(name="todo-agent", model=self.run_config.model if hasattr(self.run_config, 'model') else 'gpt-4o-mini')
+            agent = Agent(name="todo-agent", model="gpt-4o-mini")
 
             # The rest of the function calling logic stays the same as before
             # since we don't know the exact API of the Agent.run() method
