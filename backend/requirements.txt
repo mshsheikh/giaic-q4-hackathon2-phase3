@@ -34,9 +34,6 @@ anyio>=4.5
 pytest==7.4.3
 pytest-asyncio==0.21.1
 
-# OpenAI SDK & Agents
-openai>=2.15.0
-openai-agents==0.6.7
 mcp==1.25.0
 
 # Misc
