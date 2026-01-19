@@ -102,7 +102,7 @@ class TodoAgent:
 
         try:
             # Use the new OpenAI Agents SDK pattern with function calling
-            agent = Agent(name="todo-agent", model=self.run_config)
+            agent = Agent(name="todo-agent", model=self.run_config.model_name)
 
             # Define the tools for the agent using the new SDK format
             tools = [
@@ -231,7 +231,7 @@ class TodoAgent:
                     })
 
                 # Get the final response after tool execution using the new SDK
-                final_agent = Agent(name="todo-agent", model=self.run_config)
+                final_agent = Agent(name="todo-agent", model=self.run_config.model_name)
                 final_response_completion = await final_agent.run(
                     messages=messages,
                 )
