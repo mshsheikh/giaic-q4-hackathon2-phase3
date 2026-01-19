@@ -12,8 +12,8 @@ class AgentConfig:
 
     # Model provider configuration
     MODEL_API_KEY: str = os.getenv("MODEL_API_KEY", os.getenv("OPENAI_API_KEY", ""))  # Fallback to OPENAI_API_KEY
-    MODEL_BASE_URL: str = os.getenv("MODEL_BASE_URL", os.getenv("OPENAI_BASE_URL", ""))  # Fallback to OPENAI_BASE_URL
-    MODEL_NAME: str = os.getenv("MODEL_NAME", os.getenv("OPENAI_MODEL", "gpt-4o"))  # Fallback to OPENAI_MODEL
+    MODEL_BASE_URL: str = os.getenv("MODEL_BASE_URL", os.getenv("OPENAI_BASE_URL", "https://generativelanguage.googleapis.com/v1beta/openai/"))  # Default to Gemini
+    MODEL_NAME: str = os.getenv("MODEL_NAME", os.getenv("OPENAI_MODEL", "gemini-1.5-flash"))  # Default to Gemini model
 
     # Agent configuration
     AGENT_NAME: str = os.getenv("AGENT_NAME", "TodoAgent")

@@ -2,7 +2,8 @@
 TodoAgent implementation for the Todo AI Chatbot
 """
 import asyncio
-import openai
+from agents import Agent, AsyncOpenAI, OpenAIChatCompletionsModel
+from agents.run import RunConfig
 from typing import Dict, Any, List, Optional
 from pydantic import BaseModel
 from .config import AgentConfig
@@ -31,11 +32,20 @@ class TodoAgent:
         if self.config.MODEL_BASE_URL:
             client_kwargs["base_url"] = self.config.MODEL_BASE_URL
 
-        self.client = openai.AsyncOpenAI(**client_kwargs)
+        self.client = AsyncOpenAI(**client_kwargs)
+
+        # Initialize OpenAIChatCompletionsModel
+        self.model = OpenAIChatCompletionsModel(model=self.config.MODEL_NAME, openai_client=self.client)
+
+        # Create RunConfig
+        self.run_config = RunConfig(model=self.model, model_provider=self.client)
 
         # Add masked logging for verification
-        masked_key = "*" * (len(self.config.MODEL_API_KEY) - 4) + self.config.MODEL_API_KEY[-4:] if self.config.MODEL_API_KEY else "NOT_SET"
+        masked_key = self.config.MODEL_API_KEY[:4] + "****" if len(self.config.MODEL_API_KEY) >= 4 else "****"
         logging.info(f"Initialized model client with base_url: {self.config.MODEL_BASE_URL or 'DEFAULT'}, masked_api_key: {masked_key}")
+
+        # Disable tracing if enabled
+        # (assuming any tracing configuration would go here)
 
         # Set up tool registry
         self.tool_registry = ToolRegistry()
@@ -91,92 +101,97 @@ class TodoAgent:
         messages.append({"role": "user", "content": user_message})
 
         try:
-            # Call OpenAI API with function calling
-            response = await self.client.chat.completions.create(
-                model=self.config.MODEL_NAME,
+            # Use the new OpenAI Agents SDK pattern with function calling
+            agent = Agent(model=self.run_config)
+
+            # Define the tools for the agent using the new SDK format
+            tools = [
+                {
+                    "type": "function",
+                    "function": {
+                        "name": "add_task",
+                        "description": "Add a new task to the user's list",
+                        "parameters": {
+                            "type": "object",
+                            "properties": {
+                                "user_id": {"type": "string", "description": "The user's ID"},
+                                "title": {"type": "string", "description": "Title of the task"},
+                                "description": {"type": "string", "description": "Description of the task"},
+                                "priority": {"type": "string", "description": "Priority level (low, medium, high)"}
+                            },
+                            "required": ["user_id", "title"],
+                        },
+                    },
+                },
+                {
+                    "type": "function",
+                    "function": {
+                        "name": "list_tasks",
+                        "description": "Get all tasks for the user",
+                        "parameters": {
+                            "type": "object",
+                            "properties": {
+                                "user_id": {"type": "string", "description": "The user's ID"},
+                                "status_filter": {"type": "string", "description": "Filter by status (pending, completed)"},
+                            },
+                            "required": ["user_id"],
+                        },
+                    },
+                },
+                {
+                    "type": "function",
+                    "function": {
+                        "name": "complete_task",
+                        "description": "Mark a task as completed",
+                        "parameters": {
+                            "type": "object",
+                            "properties": {
+                                "user_id": {"type": "string", "description": "The user's ID"},
+                                "task_id": {"type": "string", "description": "ID of the task to complete"},
+                            },
+                            "required": ["user_id", "task_id"],
+                        },
+                    },
+                },
+                {
+                    "type": "function",
+                    "function": {
+                        "name": "delete_task",
+                        "description": "Remove a task from the list",
+                        "parameters": {
+                            "type": "object",
+                            "properties": {
+                                "user_id": {"type": "string", "description": "The user's ID"},
+                                "task_id": {"type": "string", "description": "ID of the task to delete"},
+                            },
+                            "required": ["user_id", "task_id"],
+                        },
+                    },
+                },
+                {
+                    "type": "function",
+                    "function": {
+                        "name": "update_task",
+                        "description": "Modify an existing task",
+                        "parameters": {
+                            "type": "object",
+                            "properties": {
+                                "user_id": {"type": "string", "description": "The user's ID"},
+                                "task_id": {"type": "string", "description": "ID of the task to update"},
+                                "title": {"type": "string", "description": "New title for the task"},
+                                "description": {"type": "string", "description": "New description for the task"},
+                                "status": {"type": "string", "description": "New status (pending, completed)"},
+                            },
+                            "required": ["user_id", "task_id"],
+                        },
+                    },
+                },
+            ]
+
+            # Run the agent with the new SDK
+            response = await agent.run(
                 messages=messages,
-                tools=[
-                    {
-                        "type": "function",
-                        "function": {
-                            "name": "add_task",
-                            "description": "Add a new task to the user's list",
-                            "parameters": {
-                                "type": "object",
-                                "properties": {
-                                    "user_id": {"type": "string", "description": "The user's ID"},
-                                    "title": {"type": "string", "description": "Title of the task"},
-                                    "description": {"type": "string", "description": "Description of the task"},
-                                    "priority": {"type": "string", "description": "Priority level (low, medium, high)"}
-                                },
-                                "required": ["user_id", "title"],
-                            },
-                        },
-                    },
-                    {
-                        "type": "function",
-                        "function": {
-                            "name": "list_tasks",
-                            "description": "Get all tasks for the user",
-                            "parameters": {
-                                "type": "object",
-                                "properties": {
-                                    "user_id": {"type": "string", "description": "The user's ID"},
-                                    "status_filter": {"type": "string", "description": "Filter by status (pending, completed)"},
-                                },
-                                "required": ["user_id"],
-                            },
-                        },
-                    },
-                    {
-                        "type": "function",
-                        "function": {
-                            "name": "complete_task",
-                            "description": "Mark a task as completed",
-                            "parameters": {
-                                "type": "object",
-                                "properties": {
-                                    "user_id": {"type": "string", "description": "The user's ID"},
-                                    "task_id": {"type": "string", "description": "ID of the task to complete"},
-                                },
-                                "required": ["user_id", "task_id"],
-                            },
-                        },
-                    },
-                    {
-                        "type": "function",
-                        "function": {
-                            "name": "delete_task",
-                            "description": "Remove a task from the list",
-                            "parameters": {
-                                "type": "object",
-                                "properties": {
-                                    "user_id": {"type": "string", "description": "The user's ID"},
-                                    "task_id": {"type": "string", "description": "ID of the task to delete"},
-                                },
-                                "required": ["user_id", "task_id"],
-                            },
-                        },
-                    },
-                    {
-                        "type": "function",
-                        "function": {
-                            "name": "update_task",
-                            "description": "Modify an existing task",
-                            "parameters": {
-                                "type": "object",
-                                "properties": {
-                                    "user_id": {"type": "string", "description": "The user's ID"},
-                                    "task_id": {"type": "string", "description": "ID of the task to update"},
-                                    "title": {"type": "string", "description": "New title for the task"},
-                                    "description": {"type": "string", "description": "New description for the task"},
-                                    "status": {"type": "string", "description": "New status (pending, completed)"},
-                                },
-                                "required": ["user_id", "task_id"],
-                            },
-                        },
-                    },
-                ],
+                tools=tools,
                 tool_choice="auto",  # Auto-determine which tool to call
             )
 
@@ -215,9 +230,8 @@ class TodoAgent:
                         "tool_call_id": tool_result["tool_call_id"]
                     })
 
-                # Get the final response after tool execution
-                final_response_completion = await self.client.chat.completions.create(
-                    model=self.config.MODEL_NAME,
+                # Get the final response after tool execution using the new SDK
+                final_response_completion = await agent.run(
                     messages=messages,
                 )
                 final_response = final_response_completion.choices[0].message.content

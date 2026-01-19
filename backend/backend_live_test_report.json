@@ -1,0 +1,42 @@
+{
+  "timestamp": 1768829073.763527,
+  "backend_url": "http://localhost:8000/",
+  "test_user_id": "live-test-user-claude",
+  "tests": [
+    {
+      "step": 1,
+      "description": "GET /api/test-db",
+      "status_code": null,
+      "response_text": "All connection attempts failed",
+      "latency": 0.04854321479797363
+    },
+    {
+      "step": 2,
+      "description": "chat 'hi'",
+      "status_code": null,
+      "response_text": "All connection attempts failed",
+      "latency": 0.008811235427856445
+    },
+    {
+      "step": 3,
+      "description": "chat 'Add a task to buy test milk'",
+      "status_code": null,
+      "response_text": "All connection attempts failed",
+      "latency": 0.003560781478881836
+    },
+    {
+      "step": 4,
+      "description": "chat 'Show me all my tasks'",
+      "status_code": null,
+      "response_text": "All connection attempts failed",
+      "latency": 0.004320859909057617
+    },
+    {
+      "step": 5,
+      "description": "chat 'Delete the task buy test milk'",
+      "status_code": null,
+      "response_text": "All connection attempts failed",
+      "latency": 0.003336191177368164
+    }
+  ]
+}
