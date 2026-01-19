@@ -10,9 +10,10 @@ class AgentConfig:
     Configuration class for TodoAgent settings
     """
 
-    # OpenAI configuration
-    OPENAI_API_KEY: str = os.getenv("OPENAI_API_KEY", "")
-    OPENAI_MODEL: str = os.getenv("OPENAI_MODEL", "gpt-4o")
+    # Model provider configuration
+    MODEL_API_KEY: str = os.getenv("MODEL_API_KEY", os.getenv("OPENAI_API_KEY", ""))  # Fallback to OPENAI_API_KEY
+    MODEL_BASE_URL: str = os.getenv("MODEL_BASE_URL", os.getenv("OPENAI_BASE_URL", ""))  # Fallback to OPENAI_BASE_URL
+    MODEL_NAME: str = os.getenv("MODEL_NAME", os.getenv("OPENAI_MODEL", "gpt-4o"))  # Fallback to OPENAI_MODEL
 
     # Agent configuration
     AGENT_NAME: str = os.getenv("AGENT_NAME", "TodoAgent")
@@ -32,8 +33,8 @@ class AgentConfig:
         """
         Validate the configuration settings
         """
-        if not cls.OPENAI_API_KEY:
-            raise ValueError("OPENAI_API_KEY must be set")
+        if not cls.MODEL_API_KEY:
+            raise ValueError("MODEL_API_KEY must be set")
 
         if not cls.AGENT_NAME:
             raise ValueError("AGENT_NAME must be set")

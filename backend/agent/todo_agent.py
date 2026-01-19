@@ -8,6 +8,7 @@ from pydantic import BaseModel
 from .config import AgentConfig
 from .tool_registry import ToolRegistry
 import json
+import logging
 
 
 class TodoAgent:
@@ -22,8 +23,19 @@ class TodoAgent:
         # Validate configuration
         self.config.validate()
 
-        # Set up OpenAI client
-        self.client = openai.AsyncOpenAI(api_key=self.config.OPENAI_API_KEY)
+        # Set up OpenAI-compatible client using canonical snippet
+        client_kwargs = {
+            "api_key": self.config.MODEL_API_KEY
+        }
+
+        if self.config.MODEL_BASE_URL:
+            client_kwargs["base_url"] = self.config.MODEL_BASE_URL
+
+        self.client = openai.AsyncOpenAI(**client_kwargs)
+
+        # Add masked logging for verification
+        masked_key = "*" * (len(self.config.MODEL_API_KEY) - 4) + self.config.MODEL_API_KEY[-4:] if self.config.MODEL_API_KEY else "NOT_SET"
+        logging.info(f"Initialized model client with base_url: {self.config.MODEL_BASE_URL or 'DEFAULT'}, masked_api_key: {masked_key}")
 
         # Set up tool registry
         self.tool_registry = ToolRegistry()
@@ -81,7 +93,7 @@ class TodoAgent:
         try:
             # Call OpenAI API with function calling
             response = await self.client.chat.completions.create(
-                model=self.config.OPENAI_MODEL,
+                model=self.config.MODEL_NAME,
                 messages=messages,
                 tools=[
                     {
@@ -205,7 +217,7 @@ class TodoAgent:
 
                 # Get the final response after tool execution
                 final_response_completion = await self.client.chat.completions.create(
-                    model=self.config.OPENAI_MODEL,
+                    model=self.config.MODEL_NAME,
                     messages=messages,
                 )
                 final_response = final_response_completion.choices[0].message.content

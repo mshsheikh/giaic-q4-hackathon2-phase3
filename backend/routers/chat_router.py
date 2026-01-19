@@ -81,12 +81,29 @@ async def chat_endpoint(request: Request, user_id: str, chat_request: ChatReques
         conversation_history = await conversation_service.get_conversation_history(conversation_id, user_id)
 
         # Process the message with the agent, passing the same session
-        agent_result = await agent.process_request(
-            user_message=chat_request.message,
-            user_id=user_id,
-            conversation_history=conversation_history,
-            session=session  # Use the same session created at the beginning
-        )
+        try:
+            agent_result = await asyncio.wait_for(
+                agent.process_request(
+                    user_message=chat_request.message,
+                    user_id=user_id,
+                    conversation_history=conversation_history,
+                    session=session  # Use the same session created at the beginning
+                ),
+                timeout=60  # 60 seconds timeout
+            )
+        except asyncio.TimeoutError:
+            import logging
+            logger = logging.getLogger("todo-api")
+            logger.error("Agent timeout occurred for user_id: %s", user_id)
+
+            from fastapi.responses import JSONResponse
+            return JSONResponse(
+                status_code=504,
+                content={
+                    "error": "agent_timeout",
+                    "message": "AI model timed out. Please try again."
+                }
+            )
 
         # Save the agent's response to the database using the same session
         agent_message = DBMessageService.create_message(
