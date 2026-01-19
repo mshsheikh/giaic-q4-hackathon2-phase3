@@ -1,23 +1,53 @@
-fastapi==0.104.1
-uvicorn==0.24.0
-sqlmodel==0.0.16
-pydantic>=2.12.3,<3.0.0
-pydantic-settings==2.1.0
-python-multipart==0.0.6
-python-jose[cryptography]==3.3.0
-passlib[bcrypt]==1.7.4
-better-exceptions==0.3.2
-python-dotenv==1.0.0
+# Core web framework
+fastapi==0.120.0
+starlette==0.31.0
+
+# ASGI server
+uvicorn==0.25.0
+
+# ORM & database
+sqlmodel==0.0.18
 asyncpg==0.29.0
 alembic==1.13.1
-pytest==7.4.3
-httpx==0.25.2
-pytest-asyncio==0.21.1
 psycopg2-binary==2.9.7
-PyJWT==2.8.0
-cryptography>=46.0.3
+
+# Pydantic
+pydantic<3.0.0,>=2.12.3
+pydantic-settings==2.1.0
+annotated-types>=0.6.0
+typing-inspection>=0.4.2
+
+# Security & auth
+python-jose[cryptography]==3.3.0
+passlib[bcrypt]==1.7.4
+bcrypt>=3.1.0
+
+# Utilities
+python-multipart==0.0.6
+python-dotenv==1.0.0
+better-exceptions==0.3.2
 python-json-logger==2.0.7
-starlette==0.27.0
-openai>=1.0.0
+
+# HTTP & async
+httpx==0.25.2
+anyio>=4.5
+
+# Testing
+pytest==7.4.3
+pytest-asyncio==0.21.1
+
+# OpenAI SDK & Agents
+openai>=2.15.0
 openai-agents==0.6.7
-openai_agents==0.6.7
+mcp==1.25.0
+
+# Misc
+requests<3,>=2.0
+types-requests<3,>=2.0
+griffe<2,>=1.5.6
+colorama>=0.4
+tqdm>4
+jiter<1,>=0.10.0
+distro<2,>=1.7.0
+cffi>=2.0.0
+cryptography>=46.0.3
