@@ -2,8 +2,8 @@
 TodoAgent implementation for the Todo AI Chatbot
 """
 import asyncio
-from agents import Agent, AsyncOpenAI, OpenAIChatCompletionsModel
-from agents.run import RunConfig, Runner
+from agents import Agent, Runner, AsyncOpenAI, OpenAIChatCompletionsModel
+from agents.run import RunConfig
 from typing import Dict, Any, List, Optional
 from pydantic import BaseModel
 from .config import AgentConfig
@@ -24,17 +24,13 @@ class TodoAgent:
         # Validate configuration
         self.config.validate()
 
-        # Set up OpenAI-compatible client using canonical snippet
-        client_kwargs = {
-            "api_key": self.config.MODEL_API_KEY
-        }
+        # Set up OpenAI-compatible client for Gemini
+        self.client = AsyncOpenAI(
+            api_key=self.config.MODEL_API_KEY,
+            base_url="https://generativelanguage.googleapis.com/v1beta/openai/"
+        )
 
-        if self.config.MODEL_BASE_URL:
-            client_kwargs["base_url"] = self.config.MODEL_BASE_URL
-
-        self.client = AsyncOpenAI(**client_kwargs)
-
-        # Initialize OpenAIChatCompletionsModel
+        # Initialize OpenAIChatCompletionsModel for Gemini
         self.model = OpenAIChatCompletionsModel(model="gemini-2.5-flash", openai_client=self.client)
 
         # Create RunConfig
@@ -101,11 +97,12 @@ class TodoAgent:
         messages.append({"role": "user", "content": user_message})
 
         try:
-            # Create the agent with the model object
-            agent = Agent(name="todo-agent", model=self.model)
-
-            # Define the tools for the agent
-            tools = [
+            # Create the agent with instructions
+        agent = Agent(
+            name="todo-agent",
+            instructions="You are a helpful AI assistant for managing todo lists. Your job is to understand user requests about tasks and call the appropriate tools to manage them.",
+            model=self.model,
+            tools=[
                 {
                     "type": "function",
                     "function": {
@@ -187,26 +184,26 @@ class TodoAgent:
                     },
                 },
             ]
+        )
 
-            # Use Runner to execute the agent with the provided messages and tools
-            runner = Runner(agent=agent)
+        # Prepare user input for the agent
+        user_input = {
+            "messages": messages
+        }
 
-            # Run the agent with the messages and tools
-            result = await runner.run(
-                messages=messages,
-                tools=tools,
-                tool_choice="auto",  # Auto-determine which tool to call
-            )
+        # Execute the agent using the correct execution path
+        result = Runner.run_sync(
+            agent=agent,
+            user_input=user_input,
+            run_config=self.run_config
+        )
 
-            # Process the result from the runner
-            final_response = getattr(result, 'output', str(result)) if result else "No response from agent."
-
-            # Return the response
-            return {
-                "response": final_response,
-                "tool_calls": [],
-                "tool_results": []
-            }
+        # Return the final output from the result
+        return {
+            "response": result.final_output,
+            "tool_calls": [],
+            "tool_results": []
+        }
 
         except Exception as e:
             return {
