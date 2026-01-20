@@ -2,7 +2,7 @@
 TodoAgent implementation for the Todo AI Chatbot
 """
 import asyncio
-from agents import Agent, Runner, AsyncOpenAI, OpenAIChatCompletionsModel
+from agents import Agent, AsyncOpenAI, OpenAIChatCompletionsModel
 from agents.run import RunConfig
 from typing import Dict, Any, List, Optional
 from pydantic import BaseModel
@@ -190,12 +190,8 @@ class TodoAgent:
             "messages": messages
         }
 
-        # Execute the agent using the correct execution path
-        result = Runner.run_sync(
-            agent,
-            user_input,
-            run_config=self.run_config
-        )
+        # Execute the agent using the async execution path
+        result = await agent.run_async(user_input)
 
         # Return the final output from the result
         return {
