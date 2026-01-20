@@ -149,10 +149,16 @@ async def chat_endpoint(request: Request, user_id: str, chat_request: ChatReques
         raise
     except Exception as e:
         import traceback
-        traceback.print_exc()
-        return {
-            'error': str(e)
-        }
+        tb = traceback.format_exc()
+        print(tb)  # ensure Railway logs it
+        from fastapi.responses import JSONResponse
+        return JSONResponse(
+            status_code=500,
+            content={
+                'error': str(e),
+                'traceback': tb
+            }
+        )
 
 
 @router.get("/test-db")
