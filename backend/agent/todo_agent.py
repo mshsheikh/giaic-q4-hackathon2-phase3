@@ -2,14 +2,14 @@
 TodoAgent implementation for the Todo AI Chatbot
 """
 import asyncio
-from agents import Agent, AsyncOpenAI, OpenAIChatCompletionsModel, Runner
-from agents.run import RunConfig
+from openai import AsyncOpenAI
 from typing import Dict, Any, List, Optional
 from pydantic import BaseModel
 from .config import AgentConfig
 from .tool_registry import ToolRegistry
 import json
 import logging
+import httpx
 
 
 class TodoAgent:
@@ -30,18 +30,9 @@ class TodoAgent:
             base_url="https://generativelanguage.googleapis.com/v1beta/openai/"
         )
 
-        # Initialize OpenAIChatCompletionsModel for the model
-        self.model = OpenAIChatCompletionsModel(model="gemini-2.5-flash", openai_client=self.client)
-
-        # Create RunConfig
-        self.run_config = RunConfig(model=self.model, model_provider=self.client)
-
         # Add masked logging for verification
         masked_key = self.config.MODEL_API_KEY[:4] + "****" if len(self.config.MODEL_API_KEY) >= 4 else "****"
         logging.info(f"Initialized model client with base_url: {self.config.MODEL_BASE_URL or 'DEFAULT'}, masked_api_key: {masked_key}")
-
-        # Disable tracing if enabled
-        # (assuming any tracing configuration would go here)
 
         # Set up tool registry
         self.tool_registry = ToolRegistry()
@@ -96,112 +87,161 @@ class TodoAgent:
         # Add the current user message
         messages.append({"role": "user", "content": user_message})
 
-        # Create the agent with instructions
-        agent = Agent(
-            name="todo-agent",
-            instructions="You are a Todo AI assistant.",
-            model=self.model,
-            tools=[
-                {
-                    "type": "function",
-                    "function": {
-                        "name": "add_task",
-                        "description": "Add a new task to the user's list",
-                        "parameters": {
-                            "type": "object",
-                            "properties": {
-                                "user_id": {"type": "string", "description": "The user's ID"},
-                                "title": {"type": "string", "description": "Title of the task"},
-                                "description": {"type": "string", "description": "Description of the task"},
-                                "priority": {"type": "string", "description": "Priority level (low, medium, high)"}
-                            },
-                            "required": ["user_id", "title"],
-                        },
+        # Define available functions/tools
+        functions = [
+            {
+                "name": "add_task",
+                "description": "Add a new task to the user's list",
+                "parameters": {
+                    "type": "object",
+                    "properties": {
+                        "user_id": {"type": "string", "description": "The user's ID"},
+                        "title": {"type": "string", "description": "Title of the task"},
+                        "description": {"type": "string", "description": "Description of the task"},
                     },
+                    "required": ["user_id", "title"],
                 },
-                {
-                    "type": "function",
-                    "function": {
-                        "name": "list_tasks",
-                        "description": "Get all tasks for the user",
-                        "parameters": {
-                            "type": "object",
-                            "properties": {
-                                "user_id": {"type": "string", "description": "The user's ID"},
-                                "status_filter": {"type": "string", "description": "Filter by status (pending, completed)"},
-                            },
-                            "required": ["user_id"],
-                        },
+            },
+            {
+                "name": "list_tasks",
+                "description": "Get all tasks for the user",
+                "parameters": {
+                    "type": "object",
+                    "properties": {
+                        "user_id": {"type": "string", "description": "The user's ID"},
                     },
+                    "required": ["user_id"],
                 },
-                {
-                    "type": "function",
-                    "function": {
-                        "name": "complete_task",
-                        "description": "Mark a task as completed",
-                        "parameters": {
-                            "type": "object",
-                            "properties": {
-                                "user_id": {"type": "string", "description": "The user's ID"},
-                                "task_id": {"type": "string", "description": "ID of the task to complete"},
-                            },
-                            "required": ["user_id", "task_id"],
-                        },
+            },
+            {
+                "name": "complete_task",
+                "description": "Mark a task as completed",
+                "parameters": {
+                    "type": "object",
+                    "properties": {
+                        "user_id": {"type": "string", "description": "The user's ID"},
+                        "task_id": {"type": "string", "description": "ID of the task to complete"},
                     },
+                    "required": ["user_id", "task_id"],
                 },
-                {
-                    "type": "function",
-                    "function": {
-                        "name": "delete_task",
-                        "description": "Remove a task from the list",
-                        "parameters": {
-                            "type": "object",
-                            "properties": {
-                                "user_id": {"type": "string", "description": "The user's ID"},
-                                "task_id": {"type": "string", "description": "ID of the task to delete"},
-                            },
-                            "required": ["user_id", "task_id"],
-                        },
+            },
+            {
+                "name": "delete_task",
+                "description": "Remove a task from the list",
+                "parameters": {
+                    "type": "object",
+                    "properties": {
+                        "user_id": {"type": "string", "description": "The user's ID"},
+                        "task_id": {"type": "string", "description": "ID of the task to delete"},
                     },
+                    "required": ["user_id", "task_id"],
                 },
-                {
-                    "type": "function",
-                    "function": {
-                        "name": "update_task",
-                        "description": "Modify an existing task",
-                        "parameters": {
-                            "type": "object",
-                            "properties": {
-                                "user_id": {"type": "string", "description": "The user's ID"},
-                                "task_id": {"type": "string", "description": "ID of the task to update"},
-                                "title": {"type": "string", "description": "New title for the task"},
-                                "description": {"type": "string", "description": "New description for the task"},
-                                "status": {"type": "string", "description": "New status (pending, completed)"},
-                            },
-                            "required": ["user_id", "task_id"],
-                        },
+            },
+            {
+                "name": "update_task",
+                "description": "Modify an existing task",
+                "parameters": {
+                    "type": "object",
+                    "properties": {
+                        "user_id": {"type": "string", "description": "The user's ID"},
+                        "task_id": {"type": "string", "description": "ID of the task to update"},
+                        "title": {"type": "string", "description": "New title for the task"},
+                        "description": {"type": "string", "description": "New description for the task"},
+                        "status": {"type": "string", "description": "New status (pending, completed)"},
                     },
+                    "required": ["user_id", "task_id"],
                 },
-            ]
-        )
+            },
+        ]
 
-        # Prepare user input for the agent
-        user_input = {
-            "messages": messages
-        }
+        # Execute the chat completion with function calling
+        try:
+            response = await asyncio.wait_for(
+                self.client.chat.completions.create(
+                    model="gemini-2.5-flash",
+                    messages=messages,
+                    tools=[{"type": "function", "function": func} for func in functions],
+                    tool_choice="auto",
+                ),
+                timeout=60  # 60 seconds timeout
+            )
 
-        # Execute the agent using Runner with timeout protection
-        result = await asyncio.wait_for(
-            asyncio.to_thread(Runner.run_sync, agent, user_input, run_config=self.run_config),
-            timeout=60  # 60 seconds timeout
-        )
+            # Process the response
+            response_message = response.choices[0].message
+            tool_calls = response_message.tool_calls
 
-        # Return the final output from the result
-        return {
-            "response": result.final_output if hasattr(result, 'final_output') else str(result),
-            "tool_calls": [],
-            "tool_results": []
-        }
+            tool_results = []
+
+            if tool_calls:
+                # Execute the tool calls
+                for tool_call in tool_calls:
+                    function_name = tool_call.function.name
+                    function_args = json.loads(tool_call.function.arguments)
+
+                    # Add user_id to function args if not present
+                    if "user_id" not in function_args:
+                        function_args["user_id"] = user_id
+
+                    # Call the appropriate tool
+                    result = await self.tool_registry.call_tool(function_name, function_args, session)
+                    tool_results.append({
+                        "tool_name": function_name,
+                        "parameters": function_args,
+                        "result": result
+                    })
+
+                # Get final response after tool execution
+                if tool_results:
+                    # Add tool results to messages and get final response
+                    messages.append(response_message)
+                    for tool_call in tool_calls:
+                        function_name = tool_call.function.name
+                        function_args = json.loads(tool_call.function.arguments)
+
+                        # Add user_id to function args if not present
+                        if "user_id" not in function_args:
+                            function_args["user_id"] = user_id
+
+                        result = await self.tool_registry.call_tool(function_name, function_args, session)
+                        messages.append({
+                            "role": "tool",
+                            "content": json.dumps(result),
+                            "tool_call_id": tool_call.id
+                        })
+
+                    # Get final response from the model after tool results
+                    final_response = await asyncio.wait_for(
+                        self.client.chat.completions.create(
+                            model="gemini-2.5-flash",
+                            messages=messages,
+                        ),
+                        timeout=30
+                    )
+                    final_content = final_response.choices[0].message.content
+                else:
+                    final_content = response_message.content
+            else:
+                final_content = response_message.content
+
+            return {
+                "response": final_content or "I processed your request successfully.",
+                "tool_calls": tool_results,
+                "tool_results": tool_results
+            }
+
+        except asyncio.TimeoutError:
+            return {
+                "response": "The AI model timed out. Please try again.",
+                "tool_calls": [],
+                "tool_results": []
+            }
+        except Exception as e:
+            logging.error(f"Error processing request: {str(e)}")
+            return {
+                "response": "Sorry, I encountered an error processing your request.",
+                "tool_calls": [],
+                "tool_results": []
+            }
 
     async def close(self):
         """
