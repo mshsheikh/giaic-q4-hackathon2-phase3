@@ -192,8 +192,8 @@ class TodoAgent:
 
         # Execute the agent using the correct execution path
         result = Runner.run_sync(
-            agent=agent,
-            user_input=user_input,
+            agent,
+            user_input,
             run_config=self.run_config
         )
 
