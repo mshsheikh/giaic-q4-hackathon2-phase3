@@ -190,12 +190,15 @@ class TodoAgent:
             "messages": messages
         }
 
-        # Execute the agent using the async execution path
-        result = await agent.run_async(user_input)
+        # Execute the agent with timeout protection
+        result = await asyncio.wait_for(
+            agent.run_async(user_input),
+            timeout=60  # 60 seconds timeout
+        )
 
         # Return the final output from the result
         return {
-            "response": result.final_output,
+            "response": result.final_output if hasattr(result, 'final_output') else str(result),
             "tool_calls": [],
             "tool_results": []
         }
