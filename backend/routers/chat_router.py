@@ -148,20 +148,11 @@ async def chat_endpoint(request: Request, user_id: str, chat_request: ChatReques
         # Re-raise HTTP exceptions
         raise
     except Exception as e:
-        import logging
-        logger = logging.getLogger("todo-api")
-        logger.exception("Chat endpoint failed: %s", e)
-        # Handle any other exceptions - ensure conversation_id is a string or None converted to ""
-        safe_conversation_id = chat_request.conversation_id or ""
-        # Handle any other exceptions
-        from fastapi.responses import JSONResponse
-        return JSONResponse(
-            status_code=503,
-            content={
-                "error": "db_unavailable",
-                "message": "Database is currently unavailable"
-            }
-        )
+        import traceback
+        traceback.print_exc()
+        return {
+            'error': str(e)
+        }
 
 
 @router.get("/test-db")
