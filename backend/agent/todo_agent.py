@@ -96,8 +96,7 @@ class TodoAgent:
         # Add the current user message
         messages.append({"role": "user", "content": user_message})
 
-        try:
-            # Create the agent with instructions
+        # Create the agent with instructions
         agent = Agent(
             name="todo-agent",
             instructions="You are a helpful AI assistant for managing todo lists. Your job is to understand user requests about tasks and call the appropriate tools to manage them.",
@@ -204,13 +203,6 @@ class TodoAgent:
             "tool_calls": [],
             "tool_results": []
         }
-
-        except Exception as e:
-            return {
-                "response": f"I'm sorry, I encountered an error: {str(e)}",
-                "tool_calls": [],
-                "error": str(e)
-            }
 
     async def close(self):
         """
