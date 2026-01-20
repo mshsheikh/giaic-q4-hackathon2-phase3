@@ -29,26 +29,25 @@ async def chat_endpoint(request: Request, user_id: str, chat_request: ChatReques
     TodoAgent's response along with any tool calls that were made.
     """
     try:
-        # DB preflight check using a separate session just for validation
+        # Use a single session for the entire request to ensure consistency
         from sqlmodel import Session
         from sqlalchemy import text
         from database.connection import engine
 
         with Session(engine) as session:
+            # DB preflight check
             session.execute(text("SELECT 1"))
 
-        # Get or create conversation ID
-        conversation_id = chat_request.conversation_id
-        if not conversation_id:
-            # Create a new conversation
-            from services.db_conversation_service import DBConversationService
-            with Session(engine) as session:
+            # Get or create conversation ID
+            conversation_id = chat_request.conversation_id
+            if not conversation_id:
+                # Create a new conversation
+                from services.db_conversation_service import DBConversationService
                 conversation = DBConversationService.create_conversation(session, user_id)
                 conversation_id = str(conversation.id)
-        else:
-            # Validate that the conversation belongs to the user
-            from services.db_conversation_service import DBConversationService
-            with Session(engine) as session:
+            else:
+                # Validate that the conversation belongs to the user
+                from services.db_conversation_service import DBConversationService
                 conversation = DBConversationService.get_conversation_by_id(
                     session, UUID(conversation_id), user_id
                 )
@@ -59,9 +58,8 @@ async def chat_endpoint(request: Request, user_id: str, chat_request: ChatReques
                     )
                 conversation_id = str(conversation.id) if hasattr(conversation, 'id') else conversation_id
 
-        # Save the user's message to the database
-        from services.db_message_service import DBMessageService
-        with Session(engine) as session:
+            # Save the user's message to the database
+            from services.db_message_service import DBMessageService
             user_message = DBMessageService.create_message(
                 session=session,
                 user_id=user_id,
@@ -70,58 +68,62 @@ async def chat_endpoint(request: Request, user_id: str, chat_request: ChatReques
                 content=chat_request.message
             )
 
-        # Initialize the agent and process the message
-        from agent.todo_agent import TodoAgent
-        agent = TodoAgent()
-        await agent.initialize()
+            # Get conversation history for context - need to fetch it within the same session
+            # Since the existing service creates its own session, we'll need to get it separately
+            # But for now, we'll continue with the existing pattern for simplicity
 
-        # Get conversation history for context
-        from services.conversation_service import ConversationService
-        conversation_service = ConversationService()
-        conversation_history = await conversation_service.get_conversation_history(conversation_id, user_id)
+            # Initialize the agent and process the message
+            from agent.todo_agent import TodoAgent
+            agent = TodoAgent()
+            await agent.initialize()
 
-        # Process the message with the agent, passing the same session
-        try:
-            agent_result = await asyncio.wait_for(
-                agent.process_request(
-                    user_message=chat_request.message,
-                    user_id=user_id,
-                    conversation_history=conversation_history,
-                    session=session  # Use the same session created at the beginning
-                ),
-                timeout=60  # 60 seconds timeout
-            )
-        except asyncio.TimeoutError:
-            import logging
-            logger = logging.getLogger("todo-api")
-            logger.error("Agent timeout occurred for user_id: %s", user_id)
+            # Get conversation history for context - this service uses its own session internally
+            from services.conversation_service import ConversationService
+            conversation_service = ConversationService()
+            conversation_history = await conversation_service.get_conversation_history(conversation_id, user_id)
 
-            from fastapi.responses import JSONResponse
-            return JSONResponse(
-                status_code=504,
-                content={
-                    "error": "agent_timeout",
-                    "message": "AI model timed out. Please try again."
-                }
-            )
+            # Process the message with the agent, passing the same session
+            try:
+                agent_result = await asyncio.wait_for(
+                    agent.process_request(
+                        user_message=chat_request.message,
+                        user_id=user_id,
+                        conversation_history=conversation_history,
+                        session=session  # Use the same session created at the beginning
+                    ),
+                    timeout=60  # 60 seconds timeout
+                )
+            except asyncio.TimeoutError:
+                import logging
+                logger = logging.getLogger("todo-api")
+                logger.error("Agent timeout occurred for user_id: %s", user_id)
 
-        # Save the agent's response to the database using the same session
-        agent_message = DBMessageService.create_message(
-            session=session,
-            user_id=user_id,
-            conversation_id=UUID(conversation_id),
-            role=MessageRole.ASSISTANT,
-            content=agent_result["response"]
-        )
+                from fastapi.responses import JSONResponse
+                return JSONResponse(
+                    status_code=504,
+                    content={
+                        "error": "agent_timeout",
+                        "message": "AI model timed out. Please try again."
+                    }
+                )
 
-        # Log tool calls that were made using the same session
-        if agent_result["tool_calls"]:
-            await ToolCallService.log_multiple_tool_calls(
+            # Save the agent's response to the database using the same session
+            agent_message = DBMessageService.create_message(
+                session=session,
                 user_id=user_id,
-                conversation_id=conversation_id,
-                tool_calls=agent_result["tool_calls"],
-                session=session  # Use the same session created at the beginning
+                conversation_id=UUID(conversation_id),
+                role=MessageRole.ASSISTANT,
+                content=agent_result["response"]
             )
+
+            # Log tool calls that were made using the same session
+            if agent_result["tool_calls"]:
+                await ToolCallService.log_multiple_tool_calls(
+                    user_id=user_id,
+                    conversation_id=conversation_id,
+                    tool_calls=agent_result["tool_calls"],
+                    session=session  # Use the same session created at the beginning
+                )
 
         # Format tool calls for the response
         tool_calls = []

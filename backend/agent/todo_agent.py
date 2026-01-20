@@ -79,10 +79,14 @@ class TodoAgent:
         # Prepare the messages for the agent
         messages = [{"role": "system", "content": self.system_prompt}]
 
-        # Add conversation history if provided
+        # Add conversation history if provided, but limit to last 15 messages to prevent unbounded growth
         if conversation_history:
-            for msg in conversation_history:
-                messages.append(msg)
+            # Limit conversation history to prevent memory issues
+            limited_history = conversation_history[-15:]  # Take only last 15 messages
+            for msg in limited_history:
+                # Exclude tool-call metadata to keep prompt clean
+                if msg.get("role") != "tool":
+                    messages.append(msg)
 
         # Add the current user message
         messages.append({"role": "user", "content": user_message})
@@ -173,7 +177,7 @@ class TodoAgent:
             tool_results = []
 
             if tool_calls:
-                # Execute the tool calls
+                # Execute ALL tool calls sequentially and collect results
                 for tool_call in tool_calls:
                     function_name = tool_call.function.name
                     function_args = json.loads(tool_call.function.arguments)
@@ -187,39 +191,28 @@ class TodoAgent:
                     tool_results.append({
                         "tool_name": function_name,
                         "parameters": function_args,
-                        "result": result
+                        "result": result,
+                        "tool_call_id": tool_call.id  # Store tool call ID for linking
                     })
 
-                # Get final response after tool execution
-                if tool_results:
-                    # Add tool results to messages and get final response
-                    messages.append(response_message)
-                    for tool_call in tool_calls:
-                        function_name = tool_call.function.name
-                        function_args = json.loads(tool_call.function.arguments)
+                # Add tool results to messages for the final response
+                messages.append(response_message)
+                for tool_result in tool_results:
+                    messages.append({
+                        "role": "tool",
+                        "content": json.dumps(tool_result["result"]),
+                        "tool_call_id": tool_result["tool_call_id"]
+                    })
 
-                        # Add user_id to function args if not present
-                        if "user_id" not in function_args:
-                            function_args["user_id"] = user_id
-
-                        result = await self.tool_registry.call_tool(function_name, function_args, session)
-                        messages.append({
-                            "role": "tool",
-                            "content": json.dumps(result),
-                            "tool_call_id": tool_call.id
-                        })
-
-                    # Get final response from the model after tool results
-                    final_response = await asyncio.wait_for(
-                        self.client.chat.completions.create(
-                            model="gemini-2.5-flash",
-                            messages=messages,
-                        ),
-                        timeout=30
-                    )
-                    final_content = final_response.choices[0].message.content
-                else:
-                    final_content = response_message.content
+                # Get final response from the model after tool results
+                final_response = await asyncio.wait_for(
+                    self.client.chat.completions.create(
+                        model="gemini-2.5-flash",
+                        messages=messages,
+                    ),
+                    timeout=30
+                )
+                final_content = final_response.choices[0].message.content
             else:
                 final_content = response_message.content
 
@@ -230,15 +223,16 @@ class TodoAgent:
             }
 
         except asyncio.TimeoutError:
+            logging.error(f"Timeout processing request for user_id: {user_id}")
             return {
                 "response": "The AI model timed out. Please try again.",
                 "tool_calls": [],
                 "tool_results": []
             }
         except Exception as e:
-            logging.error(f"Error processing request: {str(e)}")
+            logging.exception(f"Error processing request for user_id: {user_id}", exc_info=True)
             return {
-                "response": "Sorry, I encountered an error processing your request.",
+                "response": "Sorry, I encountered an error processing your request. Please try again.",
                 "tool_calls": [],
                 "tool_results": []
             }
