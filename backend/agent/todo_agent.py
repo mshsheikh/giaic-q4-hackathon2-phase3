@@ -4,6 +4,7 @@ TodoAgent implementation for the Todo AI Chatbot
 import asyncio
 from agents import Agent, AsyncOpenAI, OpenAIChatCompletionsModel
 from agents.run import RunConfig
+from openai_agents import AgentExecutor
 from typing import Dict, Any, List, Optional
 from pydantic import BaseModel
 from .config import AgentConfig
@@ -30,8 +31,8 @@ class TodoAgent:
             base_url="https://generativelanguage.googleapis.com/v1beta/openai/"
         )
 
-        # Initialize OpenAIChatCompletionsModel for Gemini
-        self.model = OpenAIChatCompletionsModel(model="gemini-2.5-flash", openai_client=self.client)
+        # Initialize OpenAIChatCompletionsModel for the model
+        self.model = OpenAIChatCompletionsModel(model="gpt-4o-mini", openai_client=self.client)
 
         # Create RunConfig
         self.run_config = RunConfig(model=self.model, model_provider=self.client)
@@ -190,15 +191,16 @@ class TodoAgent:
             "messages": messages
         }
 
-        # Execute the agent with timeout protection
+        # Execute the agent using AgentExecutor with timeout protection
+        executor = AgentExecutor(agent)
         result = await asyncio.wait_for(
-            agent.run_async(user_input),
+            executor.invoke(user_input),
             timeout=60  # 60 seconds timeout
         )
 
         # Return the final output from the result
         return {
-            "response": result.final_output if hasattr(result, 'final_output') else str(result),
+            "response": result.output if hasattr(result, 'output') else str(result),
             "tool_calls": [],
             "tool_results": []
         }
