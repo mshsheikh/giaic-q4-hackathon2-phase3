@@ -2,9 +2,8 @@
 TodoAgent implementation for the Todo AI Chatbot
 """
 import asyncio
-from agents import Agent, AsyncOpenAI, OpenAIChatCompletionsModel
+from agents import Agent, AsyncOpenAI, OpenAIChatCompletionsModel, Runner
 from agents.run import RunConfig
-from openai_agents import AgentExecutor
 from typing import Dict, Any, List, Optional
 from pydantic import BaseModel
 from .config import AgentConfig
@@ -32,7 +31,7 @@ class TodoAgent:
         )
 
         # Initialize OpenAIChatCompletionsModel for the model
-        self.model = OpenAIChatCompletionsModel(model="gpt-4o-mini", openai_client=self.client)
+        self.model = OpenAIChatCompletionsModel(model="gemini-2.5-flash", openai_client=self.client)
 
         # Create RunConfig
         self.run_config = RunConfig(model=self.model, model_provider=self.client)
@@ -100,7 +99,7 @@ class TodoAgent:
         # Create the agent with instructions
         agent = Agent(
             name="todo-agent",
-            instructions="You are a helpful AI assistant for managing todo lists. Your job is to understand user requests about tasks and call the appropriate tools to manage them.",
+            instructions="You are a Todo AI assistant.",
             model=self.model,
             tools=[
                 {
@@ -191,16 +190,15 @@ class TodoAgent:
             "messages": messages
         }
 
-        # Execute the agent using AgentExecutor with timeout protection
-        executor = AgentExecutor(agent)
+        # Execute the agent using Runner with timeout protection
         result = await asyncio.wait_for(
-            executor.invoke(user_input),
+            asyncio.to_thread(Runner.run_sync, agent, user_input, run_config=self.run_config),
             timeout=60  # 60 seconds timeout
         )
 
         # Return the final output from the result
         return {
-            "response": result.output if hasattr(result, 'output') else str(result),
+            "response": result.final_output if hasattr(result, 'final_output') else str(result),
             "tool_calls": [],
             "tool_results": []
         }
