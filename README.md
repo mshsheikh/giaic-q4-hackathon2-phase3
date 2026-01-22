@@ -160,6 +160,82 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ---
 
+## 🚀 Phase IV: AI-Assisted Kubernetes Deployment
+
+### Overview
+This phase implements containerized deployment of the Todo AI Chatbot application using Kubernetes orchestration with Helm charts. The deployment leverages AI-assisted DevOps tools to streamline the containerization, packaging, and deployment process.
+
+### Tools Used
+- **Docker AI (Gordon)** - Automated Dockerfile generation and optimization
+- **Minikube** - Local Kubernetes cluster for development and testing
+- **Helm** - Package manager for Kubernetes applications
+- **kubectl-ai** - Natural language Kubernetes operations
+- **Kagent** - AI-powered Kubernetes resource analysis and optimization
+
+### AI-Assisted Workflow
+1. **Containerization**: Docker AI generates optimized multi-stage Dockerfiles for both backend (FastAPI) and frontend (Next.js) applications
+2. **Orchestration**: Helm charts automate the deployment configuration with configurable parameters
+3. **Operations**: kubectl-ai enables natural language interaction with Kubernetes clusters
+4. **Analysis**: Kagent provides intelligent insights for cluster health and optimization
+
+### How to Reproduce Locally
+1. **Prerequisites**
+   ```bash
+   # Install required tools
+   # Docker Desktop with WSL 2 backend (Windows)
+   # Minikube
+   # Helm 3.x
+   # kubectl
+   ```
+
+2. **Start Minikube**
+   ```bash
+   minikube start --driver=docker --cpus=4 --memory=8192 --disk-size=20g
+   ```
+
+3. **Build Docker Images**
+   ```bash
+   # Make Docker context point to Minikube
+   eval $(minikube docker-env)
+
+   # Build backend image
+   docker build -f docker/backend.Dockerfile -t todo-backend:latest .
+
+   # Build frontend image
+   docker build -f docker/frontend.Dockerfile -t todo-frontend:latest .
+   ```
+
+4. **Deploy with Helm**
+   ```bash
+   # Install the Helm chart
+   helm install todo-app helm/todo-chart/
+
+   # Verify deployment
+   kubectl get pods
+   kubectl get svc
+   ```
+
+5. **Access the Application**
+   ```bash
+   # Get service details
+   kubectl get svc
+
+   # Access frontend via NodePort
+   minikube service todo-app-frontend --url
+   ```
+
+6. **AI-Assisted Operations**
+   ```bash
+   # Diagnose cluster health with AI
+   kubectl-ai "check why the pods are failing or confirm healthy state"
+
+   # Scale deployments with natural language
+   kubectl-ai "scale backend deployment to 2 replicas"
+
+   # Analyze cluster with Kagent
+   kagent analyze cluster
+   ```
+
 <div align="center">
 
 **Made with ❤️ by the Todo AI Team**

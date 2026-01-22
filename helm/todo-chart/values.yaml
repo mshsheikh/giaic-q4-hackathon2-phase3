@@ -1,0 +1,44 @@
+# Default values for todo-chart
+# This is a YAML-formatted file.
+# Declare variables to be passed into your templates.
+
+backend:
+  image:
+    repository: todo-backend
+    tag: "latest"
+    pullPolicy: IfNotPresent
+  service:
+    type: ClusterIP
+    port: 8000
+  replicaCount: 1
+  resources:
+    limits:
+      cpu: 500m
+      memory: 512Mi
+    requests:
+      cpu: 250m
+      memory: 256Mi
+  nodeSelector: {}
+
+frontend:
+  image:
+    repository: todo-frontend
+    tag: "latest"
+    pullPolicy: IfNotPresent
+  service:
+    type: NodePort
+    port: 3000
+    nodePort: 30000  # Optional: specify a nodePort if needed
+  replicaCount: 1
+  resources:
+    limits:
+      cpu: 500m
+      memory: 512Mi
+    requests:
+      cpu: 250m
+      memory: 256Mi
+  nodeSelector: {}
+
+# Common configurations
+global:
+  namespace: default
